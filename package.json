@@ -1,0 +1,9 @@
+{
+  "name": "ring",
+  "description": "interactive installation at SXSW",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.x"
+  }
+}
