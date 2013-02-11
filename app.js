@@ -11,7 +11,7 @@ var app = express();
 app.use(express.logger('dev'));
 
 //data base query
-app.use('/db', db.getPost);
+//app.use('/db', db.getPost);
 
 //static file server
 app.use(express.static(__dirname + '/public'));
@@ -20,7 +20,8 @@ app.use(express.static(__dirname + '/public'));
 app.listen(3000, "127.0.0.1");
 
 //periodic crawling
-setInterval(crawler.update, 60000);
+//setInterval(crawler.update, 60000);
+crawler.update();
 
 //print a message
 console.log('Listening on port 3000');
