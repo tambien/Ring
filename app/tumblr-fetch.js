@@ -125,6 +125,27 @@ var http = require('http');
 			}
 		});
 	}
+	
+	//get hte post from tumblr.com
+	function getReblog(post, callback) {
+		var id = post.id;
+		var blog_name = post.blog_name;
+
+		var options = {
+			host : 'api.tumblr.com',
+			port : 80,
+			path : '/v2/blog/' + blog_name + ".tumblr.com/posts?api_key=" + keys.tumblrAPIKey + "&id=" + id + "&notes_info=false&reblog_info=true&filter=text",
+			method : 'GET',
+		};
+		makeRequest(options, function(response) {
+			//parse the response
+			var post = parsePost(response.posts[0]);
+			//call the callback if it exists
+			if(callback) {
+				callback(post);
+			}
+		});
+	}
 
 	//returns an array of posts
 	function fetchTags(hashtag, callback) {

@@ -48,7 +48,7 @@ var pg = require('pg');
 				if(err) {
 					console.log("could not determine if id exists: " + err);
 				} else {
-					callback(res.rows.length > 0);
+					callback(res.rows.length > 0, post);
 				}
 			});
 		});
@@ -80,7 +80,7 @@ var pg = require('pg');
 		insertPost(post, function() {
 			counter.total++;
 			if(counter.total === counter.target) {
-				counter.callback();
+				counter.callback(post);
 			}
 		});
 		//register the reblogs
@@ -88,7 +88,7 @@ var pg = require('pg');
 			insertReblog(post, function() {
 				counter.total++;
 				if(counter.total === counter.target) {
-					counter.callback();
+					counter.callback(post);
 				}
 			});
 		}
@@ -97,7 +97,7 @@ var pg = require('pg');
 			insertTags(post.tags[i], post.id, post.blog_name, post.timestamp, function() {
 				counter.total++;
 				if(counter.total === counter.target) {
-					counter.callback();
+					counter.callback(post);
 				}
 			});
 		}

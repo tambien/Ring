@@ -43,11 +43,11 @@ var fetch = require("./tumblr-fetch");
 
 	function updatePost(post, callback) {
 		//check if the post is already in the database
-		db.exists(post, function(exists) {
+		db.exists(post, function(exists, retpost) {
 			if(exists) {
-				getFromDB(post, callback);
+				getFromDB(retpost, callback);
 			} else {
-				getFromTumblr(post, callback);
+				getFromTumblr(retpost, callback);
 			}
 		});
 	}
@@ -61,8 +61,8 @@ var fetch = require("./tumblr-fetch");
 	function getFromTumblr(post, callback) {
 		fetch.get(post, function(retPost) {
 			//now put hte post in our DB
-			db.put(retPost, function() {
-				updateReblogs(retPost, callback);
+			db.put(retPost, function(dbPost) {
+				updateReblogs(dbPost, callback);
 			});
 		});
 	}
@@ -74,13 +74,12 @@ var fetch = require("./tumblr-fetch");
 			target : post.reblogs.length,
 			callback : callback
 		};
-		if(post.reblogs.length > 0) {
+		if(post.reblogs.length > 0 && !post.reblogged_from) {
 			for(var i = 0; i < post.reblogs.length; i++) {
 				var newPost = post.reblogs[i];
 				updatePost(newPost, function() {
 					counter.total++;
 					if(counter.total === counter.target) {
-						debugger;
 						callback();
 					}
 				})
