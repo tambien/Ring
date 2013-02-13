@@ -1,5 +1,5 @@
-var db = require("database");
-var tumblr = require("tumblr");
+var db = require("./database");
+var tumblr = require("./tumblr");
 
 /*
  * CRAWLER
@@ -12,40 +12,13 @@ var tumblr = require("tumblr");
 	 * TUMBLR CRAWL
 	 */
 
+	//var tumblrTags = ["sxsw", "akronfamily", "TheBlackLips", "sibonobo", "crystalmethod", "EODM", "foofighters", "fareastmovement", "flightfac", "HiTek", "hoodinternet", "keysnkrates", "KillParis", "LeCastleVania", "Machine_Drum", "macklemore", "majorlazer", "Mookie_Jones", "Omar_Souleyman", "pauloakenfold", "rarariot", "I_Skream", "suunsband", "TalibKweli", "teganandsara", "ToroyMoi", "vampireweekend"];
 	var tumblrTags = ["sxsw"];
 
 	//the starting point for a crawl
 	function tumblrCrawl() {
-		tumblrSearchTags();
+		tumblr.searchTags(tumblrTags);
 	}
-
-	function tumblrSearchTags() {
-		//searches the posts with specific hashtags
-		for(var i = 0; i < tumblrTags.length; i++) {
-			var tag = tumblrTags[i];
-			tumblr.searchTag(tag, function(response) {
-				for(var i = 0; i < response.length; i++) {
-					//add that post's tag
-					var post = response[i];
-					
-					//and get the post in the db as well
-					
-					tumblr.getPost(post.blog_name, post.id, function(response) {
-						var post = response.posts[0];
-						//combine the tags and featured tags into a single list
-						var tags = response.posts[0].tags.concat(response.posts[0].featured_in_tag);
-						var tags = tags.getUnique();
-						//make it all lowercase and add it to the database
-						for(var j = 0; j < tags.length; j++) {
-							var tag = tags[j].toLowerCase();
-							db.addTag(tag, post.id, post.timestamp);
-						}
-					});
-				}
-			});
-		}
-	}
-
 	/*
 	* TWITTER CRAWL
 	*/
@@ -65,14 +38,3 @@ var tumblr = require("tumblr");
 	}
 }());
 
-Array.prototype.getUnique = function() {
-	var u = {}, a = [];
-	for(var i = 0, l = this.length; i < l; ++i) {
-		if(u.hasOwnProperty(this[i])) {
-			continue;
-		}
-		a.push(this[i]);
-		u[this[i]] = 1;
-	}
-	return a;
-}

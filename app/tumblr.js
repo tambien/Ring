@@ -1,113 +1,228 @@
-var keys = require("keys");
-var http = require('http');
-var db = require('database');
+var db = require("./tumblr-db");
+var fetch = require("./tumblr-fetch");
 
 /*
  * TUMBLR
  *
- * gets posts and tags from tumblr
+ *	mediation layer between the requests and tumblr.com and the database
+ * 	updates the database
  */
+
 ( function() {
 
-	function getPost(blog, id, callback) {
-		//if a post is already in the db
-		
-		//does it need an update? 
-		
-		//else query tumblr for that post
-		
-		
-		
-		
-		//the request options
-		var options = {
-			host : 'api.tumblr.com',
-			port : 80,
-			path : '/v2/blog/' + blog + ".tumblr.com/posts?api_key=" + keys.tumblrAPIKey + "&id=" + id,
-			method : 'GET',
-			port : 80,
+	//searched a set of tags
+	//makes a new Tumbl for each of the results
+	//syncs the Tumbl
+	function searchTags(hashtags) {
+		var counter = {
+			total : 0,
+			target : 10,
+			callback : function(){
+				console.log("done with search");
+			}
 		};
-		//else put it in the db
-		makeRequest(options, callback);
-	}
-
-	function searchTag(hashtag, params, callback) {
-		if(params && !callback) {
-			callback = params;
+		//db.DELETE();
+		//for each of the hashtags
+		for(var i = 0; i < hashtags.length; i++) {
+			//query tumblr for the tags
+			fetch.getTaggedPosts(hashtags[i], function(taggedPosts) {
+				//make a new Tumbl with that info
+				for(var j = 0; j < taggedPosts.length; j++) {
+					var post = taggedPosts[j];
+					updatePost(post, function() {
+						console.log("post updated");						
+					})
+				}
+			});
 		}
-		//the request options
-		var options = {
-			host : 'api.tumblr.com',
-			port : 80,
-			path : '/v2/tagged?tag=' + hashtag + "&api_key=" + keys.tumblrAPIKey + getParamsString(params),
-			method : 'GET',
-			port : 80,
-		};
-		makeRequest(options, callback);
 	}
 
 	/*
-	 * HELPERS
+	 * SYNCHRONIZE DATA BETWEEN TUMBLR SERVERS AND LOCAL DB
 	 */
-	var makeRequest = function(options, callback) {
-		//initiate the request
-		var body = "";
-		var req = http.request(options, function(res) {
-			//the response response
-			res.setEncoding('utf8');
-			//got a chunk of data
-			res.on('data', function(chunk) {
-				body += chunk;
-			});
-			//the request ended
-			res.on('end', function() {
-				if(res.statusCode == 200 || res.statusCode == 301) {
-					var json = JSON.parse(body);
-					if(callback) {
-						callback(json.response);
-					}
-				} else {
-					throw new Error(body);
-				}
+
+	function updatePost(post, callback) {
+		//check if the post is already in the database
+		db.exists(post, function(exists) {
+			if(exists) {
+				getFromDB(post, callback);
+			} else {
+				getFromTumblr(post, callback);
+			}
+		});
+	}
+
+	//gets the post from the db, tests if it needs updating
+	function getFromDB(post, callback) {
+		callback();
+	}
+
+	//fetches a post from tumblr.com
+	function getFromTumblr(post, callback) {
+		fetch.get(post, function(retPost) {
+			//now put hte post in our DB
+			db.put(retPost, function() {
+				updateReblogs(retPost, callback);
 			});
 		});
-
-		req.on('error', function(e) {
-			console.log('problem with request: ' + e.message);
-		}).end();
 	}
-	var getParamsString = function(params) {
-		if(!params || params instanceof Function)
-			return '';
 
-		var paramArray = [];
-
-		for(var k in params) {
-			paramArray.push(k + '=' + params[k]);
-		}
-		if(paramArray.length > 0) {
-			return "&" + paramArray.join('&');
+	function updateReblogs(post, callback) {
+		//an object to test for the callback
+		var counter = {
+			total : 0,
+			target : post.reblogs.length,
+			callback : callback
+		};
+		if(post.reblogs.length > 0) {
+			for(var i = 0; i < post.reblogs.length; i++) {
+				var newPost = post.reblogs[i];
+				updatePost(newPost, function() {
+					counter.total++;
+					if(counter.total === counter.target) {
+						debugger;
+						callback();
+					}
+				})
+			}
 		} else {
-			return "";
+			callback();
 		}
 	}
+
+	function getTagFromTime(tag, timeFrom, timeTo) {
+
+	}
+
 	/*
 	 *  PUBLIC API
 	 */
-	module.exports.searchTag = function(hashtag, callback) {
-		searchTag(hashtag, {
-			//add a limit for testing purposes
-			limit : 1
-		}, callback);
-	}
+	module.exports.searchTags = searchTags;
 
-	module.exports.getPost = function(host, id, callback) {
-		getPost(host, id, callback);
-	}
-
-	module.exports.searchTagBefore = function(hashtag, timestamp, callback) {
-		getTag(hashtag, {
-			before : timestamp
-		}, callback);
-	}
+	//module.exports.updateTags = updateTags;
 }());
+
+/*
+ * TUMBL
+ *
+ * an object representing a post
+ *
+ * all of the internals are abstracted so it doesn't matter if it's coming from a databse or tumblr.com
+ *
+ * parameters:
+ * 	id,
+ * 	blog_name,
+ * 	note_count,
+ * 	reblogs : [], //each reblog  = { id, blog_name };
+ * 	tags : [], //combination of featured_tags and tags
+ * 	timestamp: unix time,
+ *	text,
+ * 	photos: json if it exists
+ * 	updated: time of last update from tumblr.com
+ */
+function Tumbl(id, blog_name) {
+	this.id = id;
+	this.blog_name = blog_name;
+};
+
+//gets all of the parameters, returns 'this' to the callback
+Tumbl.prototype.sync = function(callback) {
+	this._existsInDB(function(exists) {
+		//if it exists, does it need an update?
+		if(exists) {
+			//get it from the db
+			this._getFromDB(function(post) {
+				//now check if it needs an update
+				this._needsUpdate(function(needsUpdate) {
+					if(needsUpdate) {
+						this._smartUpdate(callback);
+					} else {
+						callback(this);
+					}
+				});
+			})
+		} else {
+			//get it from tumblr.com
+			this._fetch(function() {
+				//put it in the database
+				this._putInDB(function() {
+					//get the reblogs
+					this._getReblogs(function() {
+						callback.bind(this)(this);
+					});
+				});
+			});
+		}
+	});
+}
+
+Tumbl.prototype._getReblogs = function(callback) {
+	//an object to test for the callback
+	var counter = {
+		total : 0,
+		target : this.reblogs.length,
+		callback : callback.bind(this),
+	};
+	if(this.reblogs.length > 0) {
+		for(var i = 0; i < this.reblogs.length; i++) {
+			var t = new Tumbl(this.reblogs[i].id, this.reblogs[i].blog_name);
+			t.sync(function() {
+				counter.total++;
+				if(counter.total === counter.target) {
+					counter.callback(this);
+				}
+			});
+		}
+	} else {
+		callback.bind(this)(this);
+	}
+}
+//tests if the object needs an update
+Tumbl.prototype._needsUpdate = function(callback) {
+	//just false for now
+	callback.bind(this)(false);
+}
+//tests if the object exists in the database
+Tumbl.prototype._existsInDB = function(callback) {
+	db.exists(this.id, callback.bind(this));
+}
+//gets the post from teh database
+Tumbl.prototype._getFromDB = function(callback) {
+	//returns an object with all of the parameters
+	db.get(this, function(post) {
+		//fill all of the fields and calll the callback
+		this.reblogs = post.reblogs;
+		this.text = post.text;
+		this.timestamp = post.timestamp;
+		this.photo = post.photo;
+		this.tags = post.tags;
+		this.note_count = post.note_count;
+		this._doCallback(callback);
+	});
+}
+//fetches the object from tumblr.com and puts it in the database
+Tumbl.prototype._fetch = function(callback) {
+	fetch.get(this, function(post) {
+		//fill all of the fields and calll the callback
+		this.reblogs = post.reblogs;
+		this.text = post.text;
+		this.timestamp = post.timestamp;
+		this.photo = post.photo;
+		this.tags = post.tags;
+		this.note_count = post.note_count;
+		this._doCallback(callback);
+	}.bind(this));
+}
+//syncs the necessary parameters by comparing previous reblogs to the new ones fetched
+Tumbl.prototype._smartUpdate = function(callback) {
+	this._doCallback(callback);
+};
+//pushes the object to the database
+Tumbl.prototype._putInDB = function(callback) {
+	db.put(this, callback.bind(this));
+};
+Tumbl.prototype._doCallback = function(callback) {
+	if(callback) {
+		callback.bind(this)();
+	}
+}

@@ -1,6 +1,5 @@
 var express = require('express');
-var db = require('./node_modules/database');
-var crawler = require('./node_modules/crawler');
+var crawler = require('./app/crawler');
 var app = express();
 
 /* 
