@@ -1,4 +1,3 @@
-var db = require("./database");
 var tumblr = require("./tumblr");
 
 /*
@@ -12,12 +11,14 @@ var tumblr = require("./tumblr");
 	 * TUMBLR CRAWL
 	 */
 
-	//var tumblrTags = ["sxsw", "akronfamily", "TheBlackLips", "sibonobo", "crystalmethod", "EODM", "foofighters", "fareastmovement", "flightfac", "HiTek", "hoodinternet", "keysnkrates", "KillParis", "LeCastleVania", "Machine_Drum", "macklemore", "majorlazer", "Mookie_Jones", "Omar_Souleyman", "pauloakenfold", "rarariot", "I_Skream", "suunsband", "TalibKweli", "teganandsara", "ToroyMoi", "vampireweekend"];
-	var tumblrTags = ["sxsw"];
+	var tumblrTags = ["sxsw", "akronfamily", "TheBlackLips", "sibonobo", "crystalmethod", "EODM", "foofighters", "fareastmovement", "flightfac", "HiTek", "hoodinternet", "keysnkrates", "KillParis", "LeCastleVania", "Machine_Drum", "macklemore", "majorlazer", "Mookie_Jones", "Omar_Souleyman", "pauloakenfold", "rarariot", "I_Skream", "suunsband", "TalibKweli", "teganandsara", "ToroyMoi", "vampireweekend"];
+	//var tumblrTags = ["sxsw"];
 
 	//the starting point for a crawl
 	function tumblrCrawl() {
-		tumblr.searchTags(tumblrTags);
+		tumblr.searchTags(tumblrTags, function(results){
+			console.log("%d tumblr requests, %d db insertions, %d db requests, %d db updates, in %d milliseconds", results.tumblrGet, results.dbPut, results.dbGet, results.dbUpdate, results.timeElapsed);
+		});
 	}
 	/*
 	* TWITTER CRAWL

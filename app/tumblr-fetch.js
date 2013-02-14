@@ -27,6 +27,7 @@ var http = require('http');
 	 * 	timestamp: unix time,
 	 *	text,
 	 * 	photos: json if it exists
+	 * 	url,
 	 * }
 	 */
 	function parsePost(response) {
@@ -41,7 +42,7 @@ var http = require('http');
 		}
 		//make the tags lowercase
 		for(var i = 0; i < tags.length; i++) {
-			tags[i] = tags[i].toLowerCase().toString("utf8");
+			tags[i] = tags[i].toLowerCase().removeInvalidChars();
 		}
 		//go through all of the reblogs
 		var reblogs = [];
@@ -56,15 +57,15 @@ var http = require('http');
 							blog_name : note.blog_name,
 						}
 						reblogs.push(reb);
-					} 
+					}
 				}
 			}
 		}
 		var reblogged_from = null;
-		if (response.reblogged_from_id){
+		if(response.reblogged_from_id) {
 			reblogged_from = {
-				id: response.reblogged_from_id,
-				blog_name: response.reblogged_from_name
+				id : response.reblogged_from_id,
+				blog_name : response.reblogged_from_name
 			}
 		}
 		//do the text formatting
@@ -79,7 +80,7 @@ var http = require('http');
 				break;
 		}
 		//force correct encoding
-		text = text.toString("utf8");
+		text = text.removeInvalidChars();
 		//limit the size of the text field to 1000 chars
 		if(text.length > 1000) {
 			text = text.substr(0, 1000);
@@ -125,7 +126,7 @@ var http = require('http');
 			}
 		});
 	}
-	
+
 	//get hte post from tumblr.com
 	function getReblog(post, callback) {
 		var id = post.id;
@@ -219,4 +220,8 @@ Array.prototype.getUnique = function() {
 		u[this[i]] = 1;
 	}
 	return a;
+}
+String.prototype.removeInvalidChars = function() {
+	//this gets rid of people putting emojis in their posts
+	return this.replace(/[^\u0000-\u27FF]/g, '')
 }
