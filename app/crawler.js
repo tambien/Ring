@@ -1,5 +1,5 @@
-var tumblr = require("./tumblr");
-
+var tumblr = require("./tumblr/tumblr");
+var async = require('async');
 /*
  * CRAWLER
  *
@@ -15,27 +15,42 @@ var tumblr = require("./tumblr");
 	//var tumblrTags = ["sxsw"];
 
 	//the starting point for a crawl
-	function tumblrCrawl() {
-		tumblr.searchTags(tumblrTags, function(results){
+	function tumblrCrawl(topLevelCallback) {
+		tumblr.searchTags(tumblrTags, function(results) {
 			console.log("%d tumblr requests, %d db insertions, %d db requests, %d db updates, in %d milliseconds", results.tumblrGet, results.dbPut, results.dbGet, results.dbUpdate, results.timeElapsed);
+			topLevelCallback(null);
 		});
 	}
+
 	/*
 	* TWITTER CRAWL
 	*/
 
 	//the starting point for a crawl
-	function twitterCrawl() {
-
+	function twitterCrawl(topLevelCallback) {
+		topLevelCallback(null)
 	}
 
 	/*
-	 * CRAWLER'S PUBLIC API
+	 * UPDATE FUNCTION
 	 */
-	module.exports.update = function() {
-		tumblrCrawl();
-		twitterCrawl();
-		console.log("updating");
+	module.exports.update = function(topLevelCallback) {
+		console.log("updating database" + new Date());
+
+		async.series([
+
+		function(tumblrCrawlCallback) {
+			tumblrCrawl(tumblrCrawlCallback);
+		},
+
+		function(twitterCrawlCallback) {
+			twitterCrawl(twitterCrawlCallback);
+		}], function(err) {
+			if(err) {
+				console.log(err)
+			} else {
+				topLevelCallback(null);
+			}
+		})
 	}
 }());
-

@@ -1,6 +1,6 @@
 var express = require('express');
 var crawler = require('./app/crawler');
-var db = require('./app/database');
+var client = require('./app/client');
 var app = express();
 
 /* 
@@ -10,8 +10,8 @@ var app = express();
 // log requests
 app.use(express.logger('dev'));
 
-//data base query
-//app.use('/db', db.getPost);
+//all client requests goes through here
+app.use('/get', client.get);
 
 //static file server
 app.use(express.static(__dirname + '/public'));
@@ -21,13 +21,11 @@ app.listen(3000, "127.0.0.1");
 
 //periodic crawling
 //setInterval(crawler.update, 60000);
-crawler.update();
-
-//database query
-db.getTagBetweenTime(["sxsw"], new Date(2012, 6, 1), new Date(), function(results){
-	//console.log(results.elapsedTime);
-	console.log(results);
-})
+crawler.update(function(err){
+	if (err){
+		console.log(err);
+	}
+});
 
 //print a message
 console.log('Listening on port 3000');
