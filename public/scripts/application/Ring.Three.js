@@ -10,11 +10,10 @@ RING.Three = function() {
 	var camera, scene, projector, renderer;
 
 	function init() {
-		container = document.createElement('div');
-		document.body.appendChild(container);
-
+		container = $("#canvas")[0];
+		//document.body.appendChild(container);
 		camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
-		camera.position.set(0, 0, 20);
+		camera.position.set(0, 0, 100);
 		scene = new THREE.Scene();
 
 		var PI2 = Math.PI * 2;
@@ -28,10 +27,31 @@ RING.Three = function() {
 		renderer.setSize(window.innerWidth, window.innerHeight);
 
 		container.appendChild(renderer.domElement);
-		stats = new Stats();
-		stats.domElement.style.position = 'absolute';
-		stats.domElement.style.top = '0px';
-		container.appendChild(stats.domElement);
+		renderer.domElement.style.position = 'absolute';
+		renderer.domElement.style.top = '0px';
+		renderer.domElement.style.left = '0px';
+
+		if(RING.dev) {
+			stats = new Stats();
+			stats.domElement.style.position = 'absolute';
+			stats.domElement.style.top = '0px';
+			container.appendChild(stats.domElement);
+		}
+		//make the central octogon
+		var octogonGeometry = new THREE.CircleGeometry(48, 8);
+		var octogon = new THREE.Mesh(octogonGeometry, new THREE.MeshBasicMaterial({
+			color : 0x000000,
+			opacity : 1,
+			wireframe : false,
+			wireframeLinewidth : 1,
+		}));
+		//position it
+		octogon.position.x = 0;
+		octogon.position.y = 0;
+		octogon.position.z = 0;
+		octogon.rotation.z = Math.PI/8;
+		//add it to the scene
+		scene.add(octogon);
 
 		document.addEventListener('mousedown', onDocumentMouseDown, false);
 
@@ -64,7 +84,7 @@ RING.Three = function() {
 
 		if(intersects.length > 0) {
 
-			intersects[0].object.material.color.setHex(Math.random() * 0xffffff);
+			intersects[0].object.material.color.setHex(RING.Util.randomFloat(.2, .8) * 0xffffff);
 
 		}
 
@@ -73,7 +93,9 @@ RING.Three = function() {
 	function animate() {
 		requestAnimationFrame(animate);
 		renderer.render(scene, camera);
-		stats.update();
+		if(RING.dev) {
+			stats.update();
+		}
 	}
 
 	//adds a circle and returns that object
@@ -86,7 +108,7 @@ RING.Three = function() {
 	 *
 	 * a wrapper on the threejs object to make it easier to change
 	 */
-	
+
 	var circles = [];
 
 	function Circle(x, y, size) {
@@ -99,7 +121,7 @@ RING.Three = function() {
 		function init() {
 			//create the obj
 			self.object = new THREE.Mesh(self.geometry, new THREE.MeshBasicMaterial({
-				color : Math.random() * 0xffffff,
+				color : RING.Util.randomFloat(.2, .8) * 0xffffff,
 				opacity : .8,
 				wireframe : false,
 				wireframeLinewidth : 1,
@@ -107,13 +129,14 @@ RING.Three = function() {
 			//position it
 			self.object.position.x = self.x;
 			self.object.position.y = self.y;
+			self.object.position.z = RING.Util.randomFloat(-.5, .5);
 			//size it
 			self.object.scale.x = Math.log(self.size) + 1;
 			self.object.scale.y = Math.log(self.size) + 1;
-			
+
 			//add it to the scene
-			scene.add(object);
-			circles.push(object);
+			scene.add(self.object);
+			circles.push(self.object);
 		}
 
 		init();
@@ -125,8 +148,8 @@ RING.Three = function() {
 		this.object.position.y = y;
 	}
 
-	Circle.prototype.geometry = new THREE.CircleGeometry(2, 100);
-	
+	Circle.prototype.geometry = new THREE.CircleGeometry(1, 100);
+
 	/*
 	 * API
 	 */

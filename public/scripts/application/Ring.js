@@ -5,13 +5,17 @@ $(function() {
 });
 /*
  * RING
+ * 
+ * the main application
  */
 var RING = function() {
 
 	function initialize(){
 		//make the tumblr collection
 		RING.tumblrCollection = new RING.TumblrCollection();
-		getTagsBetween(["sxsw", "rsvp"], new Date(2012, 2, 2).toISOString(), new Date().toISOString());
+		//get all of the tags
+		//getTags();
+		getTagsBetween(["sxsw", "majorlazer"], new Date(2012, 2, 2).toISOString(), new Date().toISOString());
 	}
 	
 	/*
@@ -28,7 +32,6 @@ var RING = function() {
 		var reqString = window.location+"get?"+decodeURIComponent($.param(obj));
 		$.ajax(reqString, {
 			success : function(response){
-				console.log(response);
 				RING.tumblrCollection.update(response.tumblr);
 			}, 
 			error : function(){
@@ -36,6 +39,7 @@ var RING = function() {
 			}
 		})
 	}
+	
 	
 	
 
