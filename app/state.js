@@ -7,12 +7,12 @@ var async = require('async');
  */
 ( function() {
 	
+	var tags = ["sxsw", "akronfamily", "TheBlackLips", "sibonobo", "crystalmethod", "EODM", "foofighters", "fareastmovement", "flightfac", "HiTek", "hoodinternet", "keysnkrates", "KillParis", "LeCastleVania", "Machine_Drum", "macklemore", "majorlazer", "Mookie_Jones", "Omar_Souleyman", "pauloakenfold", "rarariot", "I_Skream", "suunsband", "TalibKweli", "teganandsara", "ToroyMoi", "vampireweekend"];
+	
 	//returns all of the tags which the app is tracking
 	function getTags(callback){
-		db.connect(function(err, client){
-			if (err){
-				console.log("could not connect to database "+err);
-			}
+		db.connect(function(client){
+			//client.query();
 		});
 	}
 	
@@ -21,5 +21,7 @@ var async = require('async');
 	 */
 		
 	module.exports.getTags = getTags;
+	
+	module.exports.tags = tags;
 
 }());

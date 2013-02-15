@@ -63,7 +63,7 @@ var async = require('async');
 
 	//tagExists combined with insertTag
 	function insertTagIfDoesNotExist(hashtag, id, blog_name, timestamp, callback) {
-		tagExists(hashtag, id, function(exists) {
+		tagExists(hashtag, id, blog_name, function(exists) {
 			if(!exists) {
 				insertTag(hashtag, id, blog_name, timestamp, callback);
 			}
@@ -112,7 +112,7 @@ var async = require('async');
 				post.note_count = retPost.note_count;
 				post.timestamp = retPost.timestamp;
 				post.text = retPost.text;
-				post.photos = JSON.parse(retPost.photos);
+				post.photo = retPost.photos;
 				post.url = retPost.url;
 				getPostCallback(null);
 			});
@@ -120,16 +120,14 @@ var async = require('async');
 
 		//get the tags
 		function(getTagsCallback) {
-			getTags(post, function(tags) {
-				post.tags = tags;
+			getTags(post, function(tagsPost) {
 				getTagsCallback(null);
 			});
 		},
 
 		//get the reblogs
 		function(getReblogsCallback) {
-			getReblogs(post, function(reblogs) {
-				post.reblogs = reblogs;
+			getReblogs(post, function(reblogsPost) {
 				getReblogsCallback(null);
 			});
 		}
@@ -161,9 +159,11 @@ var async = require('async');
 		db.connect(function(client) {
 			client.query("SELECT reblog_id, reblog_name FROM tumblr_reblogs WHERE id = $1 AND blog_name = $2", [post.id, post.blog_name], function(err, res) {
 				if(err) {
-					console.log("could not determine if repost exists: " + err);
+					console.log("could not get reposts: " + err);
 				} else {
-					callback(res.rows);
+					//wrap the callback in a post object
+					post.reblogs = res.rows;
+					callback(post);
 				}
 			});
 		});
@@ -172,9 +172,9 @@ var async = require('async');
 	//get all the tags for a post
 	function getTags(post, callback) {
 		db.connect(function(client) {
-			client.query("SELECT tag FROM tumblr_tags WHERE id = $1 AND blog_name = $2", [post.id, post.blog_name], function(err, res) {
+			client.query("SELECT tag, timestamp FROM tumblr_tags WHERE id = $1 AND blog_name = $2", [post.id, post.blog_name], function(err, res) {
 				if(err) {
-					console.log("could not determine if repost exists: " + err);
+					console.log("could not get tag: " + err);
 				} else {
 					//put it into a single array
 					var rows = res.rows;
@@ -182,7 +182,9 @@ var async = require('async');
 					for(var i = 0; i < rows.length; i++) {
 						tags.push(rows[i].tag);
 					}
-					callback(tags);
+					post.tags = tags;
+					post.timestamp = rows[0].timestamp;
+					callback(post);
 				}
 			});
 		});
@@ -207,9 +209,9 @@ var async = require('async');
 	}
 
 	//tests if a tag is already in teh database
-	function tagExists(tag, id, callback) {
+	function tagExists(tag, id, blog_name, callback) {
 		db.connect(function(client) {
-			client.query("SELECT * FROM tumblr_tags WHERE id = $1 AND tag = $2", [id, tag], function(err, res) {
+			client.query("SELECT * FROM tumblr_tags WHERE id = $1 AND tag = $2 AND blog_name = $3", [id, tag, blog_name], function(err, res) {
 				if(err) {
 					console.log("could not determine if tag exists: " + err);
 				} else {

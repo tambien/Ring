@@ -1,5 +1,6 @@
 var tumblr = require("./tumblr/tumblr");
 var async = require('async');
+var state = require('./state');
 /*
  * CRAWLER
  *
@@ -11,12 +12,10 @@ var async = require('async');
 	 * TUMBLR CRAWL
 	 */
 
-	var tumblrTags = ["sxsw", "akronfamily", "TheBlackLips", "sibonobo", "crystalmethod", "EODM", "foofighters", "fareastmovement", "flightfac", "HiTek", "hoodinternet", "keysnkrates", "KillParis", "LeCastleVania", "Machine_Drum", "macklemore", "majorlazer", "Mookie_Jones", "Omar_Souleyman", "pauloakenfold", "rarariot", "I_Skream", "suunsband", "TalibKweli", "teganandsara", "ToroyMoi", "vampireweekend"];
-	//var tumblrTags = ["sxsw"];
 
 	//the starting point for a crawl
 	function tumblrCrawl(topLevelCallback) {
-		tumblr.searchTags(tumblrTags, function(results) {
+		tumblr.searchTags(state.tags, function(results) {
 			console.log("%d tumblr requests, %d db insertions, %d db requests, %d db updates, in %d milliseconds", results.tumblrGet, results.dbPut, results.dbGet, results.dbUpdate, results.timeElapsed);
 			topLevelCallback(null);
 		});
@@ -35,7 +34,7 @@ var async = require('async');
 	 * UPDATE FUNCTION
 	 */
 	module.exports.update = function(topLevelCallback) {
-		console.log("updating database" + new Date());
+		console.log("updating database " + new Date());
 
 		async.series([
 
@@ -45,7 +44,8 @@ var async = require('async');
 
 		function(twitterCrawlCallback) {
 			twitterCrawl(twitterCrawlCallback);
-		}], function(err) {
+		}
+		], function(err) {
 			if(err) {
 				console.log(err)
 			} else {

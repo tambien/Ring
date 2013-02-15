@@ -11,7 +11,6 @@ var pg = require('pg');
 		pg.connect(key.dbConnectionString, function(err, client){
 			if(err){
 				console.log("could not connect to databse "+err);
-				client.emit("drain");
 			} else {
 				callback(client);
 			}

@@ -26,7 +26,7 @@ var http = require('http');
 	 * 	tags : [], //combination of featured_tags and tags
 	 * 	timestamp: unix time,
 	 *	text,
-	 * 	photos: json if it exists
+	 * 	photos: url of image link
 	 * 	url,
 	 * }
 	 */
@@ -86,11 +86,17 @@ var http = require('http');
 			text = text.substr(0, 1000);
 		}
 		//get the photos if there are any
-		var photo = {};
+		var photo = '';
 		if(response.photos) {
-			photo = response.photos[0].original_size;
+			//find the image with the right width
+			var alt_sizes = response.photos[0].alt_sizes;
+			for (var i = 0; i < alt_sizes.length; i++){
+				if (alt_sizes[i].width===250){
+					photo = alt_sizes[i].url;
+					break;
+				} 
+			}
 		}
-		photo = JSON.stringify(photo);
 		var post = {
 			id : response.id,
 			blog_name : response.blog_name,

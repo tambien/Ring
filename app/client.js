@@ -1,5 +1,6 @@
 var tumblrDB = require("./tumblr/tumblr-db");
 var async = require('async');
+var state = require('./state');
 
 /*
  * THIS IS THE DATABASE MANAGER THAT TALKS TO THE CLIENT
@@ -34,9 +35,12 @@ var async = require('async');
 					if (err){
 						console.log(err)
 					} else {
-						req.send(results);
+						res.send(results);
 					}
 				})
+				break;
+			case "tags":
+				res.send(state.tags);
 				break;
 			default:
 				res.status(404).send('nope!');
@@ -65,7 +69,7 @@ var async = require('async');
 							postGetCallback(null, retPost);
 						});
 					}, function(err, retPosts) {
-						results.tumblr = retPosts;
+						results.tumblr = results.tumblr.concat(retPosts);
 						getTagsCallback(null);
 					})
 				});
