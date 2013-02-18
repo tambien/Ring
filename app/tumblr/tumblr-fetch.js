@@ -69,6 +69,7 @@ var http = require('http');
 				blog_name : response.reblogged_from_name
 			}
 		}
+		var reblog = reblogged_from!==null;
 		//do the text formatting
 		var text = '';
 
@@ -109,6 +110,7 @@ var http = require('http');
 			photo : photo,
 			url : response.post_url,
 			reblogged_from : reblogged_from,
+			reblog : reblog,
 		};
 		return post;
 	}

@@ -67,9 +67,9 @@ var state = require('./state');
 				tumblrDB.getTagBetweenTime(tag, timeFrom, timeTo, function(posts) {
 					async.map(posts, function(post, postGetCallback) {
 						tumblrDB.getFull(post, function(retPost) {
-							//getTumblrReblogs(retPost, results, function() {
+							getTumblrReblogs(retPost, results, function() {
 								postGetCallback(null, retPost);
-							//})
+							})
 						});
 						//also needs all of the reblogs
 					}, function(err, retPosts) {

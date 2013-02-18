@@ -44,7 +44,8 @@ var async = require("async");
 				console.log(err);
 			} else {
 				results.timeElapsed = new Date() - results.startTime;
-				topLevelCallback(results);
+				console.log("%d tumblr requests, %d db insertions, %d db updates, in %d milliseconds", results.tumblrGet, results.dbPut, results.dbUpdate, results.timeElapsed);
+				topLevelCallback(null);
 			}
 		});
 	}
@@ -55,7 +56,7 @@ var async = require("async");
 
 	function updatePost(post, memo, callback) {
 		//check if the post needs an update
-		needsUpdate(post, function(update){
+		needsUpdate(post, memo, function(update){
 			if (update){
 				getFromTumblr(post, memo, callback);
 			}	
@@ -63,7 +64,7 @@ var async = require("async");
 	}
 	
 	//TODO: if the post exists already in the db, check the update time
-	function needsUpdate(post, callback){
+	function needsUpdate(post, memo, callback){
 		callback(true);
 	}
 
@@ -75,7 +76,6 @@ var async = require("async");
 			async.parallel([
 			function(putDBCallback) {
 				db.put(retPost, function() {
-					memo.dbPut++;
 					putDBCallback(null);
 				});
 			},

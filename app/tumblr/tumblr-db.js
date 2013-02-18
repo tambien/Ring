@@ -38,14 +38,13 @@ var async = require('async');
 				insertTagIfDoesNotExist(tag, post, callback);
 			}, tagCallback);
 		}], topLevelCallback);
-
 	}
 
 	//post is an object with these fields
 	function insertPost(post, callback) {
 		db.connect(function(client) {
 			var updateTime = new Date();
-			client.query("INSERT INTO tumblr_posts (id, blog_name, note_count, text, photo, url, updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [post.id, post.blog_name, post.note_count, post.text, post.photo, post.url, updateTime], function(err, result) {
+			client.query("INSERT INTO tumblr_posts (id, blog_name, note_count, text, photo, url, reblog, updated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", [post.id, post.blog_name, post.note_count, post.text, post.photo, post.url, post.reblog, updateTime], function(err, result) {
 				if(err) {
 					console.log("could not add post %d %s to database: %s", post.id, post.blog_name, err);
 				} else {
@@ -148,6 +147,7 @@ var async = require('async');
 				post.text = retPost.text;
 				post.photo = retPost.photo;
 				post.url = retPost.url;
+				post.reblog = retPost.reblog;
 				post.updated = retPost.updated;
 				getPostCallback(null);
 			});

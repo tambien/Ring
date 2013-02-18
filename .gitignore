@@ -5,3 +5,5 @@ app/keys.js
 DELETE_ALL.sql
 
 *.sql
+
+log/Ring.log

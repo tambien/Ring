@@ -15,8 +15,7 @@ var state = require('./state');
 
 	//the starting point for a crawl
 	function tumblrCrawl(topLevelCallback) {
-		tumblr.searchTags(state.tags, function(results) {
-			console.log("%d tumblr requests, %d db insertions, %d db requests, %d db updates, in %d milliseconds", results.tumblrGet, results.dbPut, results.dbGet, results.dbUpdate, results.timeElapsed);
+		tumblr.searchTags(state.tags, function() {
 			topLevelCallback(null);
 		});
 	}
