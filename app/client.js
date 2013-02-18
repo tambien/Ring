@@ -31,10 +31,11 @@ var state = require('./state');
 		var query = req.query;
 		switch(query.type) {
 			case "range":
-				getTagBetweenTime(query.tags, query.start, query.end, function(err, results){
-					if (err){
+				getTagBetweenTime(query.tags, query.start, query.end, function(err, results) {
+					if(err) {
 						console.log(err)
 					} else {
+						//should remove all duplicate posts first
 						res.send(results);
 					}
 				})
@@ -66,8 +67,11 @@ var state = require('./state');
 				tumblrDB.getTagBetweenTime(tag, timeFrom, timeTo, function(posts) {
 					async.map(posts, function(post, postGetCallback) {
 						tumblrDB.getFull(post, function(retPost) {
-							postGetCallback(null, retPost);
+							//getTumblrReblogs(retPost, results, function() {
+								postGetCallback(null, retPost);
+							//})
 						});
+						//also needs all of the reblogs
 					}, function(err, retPosts) {
 						results.tumblr = results.tumblr.concat(retPosts);
 						getTagsCallback(null);
@@ -88,6 +92,21 @@ var state = require('./state');
 				topLevelCallback(null, results)
 			}
 		});
+	}
+
+	function getTumblrReblogs(post, results, topLevelCallback) {
+		async.each(post.reblogs, function(reblog, postGetCallback) {
+			var post = {
+				id : reblog.reblog_id
+			}
+			tumblrDB.getFull(post, function(retPost) {
+				results.tumblr.push(retPost);
+				postGetCallback(null);
+			});
+		}, function(err) {
+			//results.tumblr = results.tumblr.concat(retPosts);
+			topLevelCallback(null);
+		})
 	}
 
 	/*

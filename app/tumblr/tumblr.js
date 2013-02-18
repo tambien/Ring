@@ -54,31 +54,38 @@ var async = require("async");
 	 */
 
 	function updatePost(post, memo, callback) {
-		//check if the post is already in the database
-		db.exists(post, function(exists) {
-			if(exists) {
-				memo.dbGet++;
-				getFromDB(post, memo, callback);
-			} else {
+		//check if the post needs an update
+		needsUpdate(post, function(update){
+			if (update){
 				getFromTumblr(post, memo, callback);
-			}
-		});
+			}	
+		})
+	}
+	
+	//TODO: if the post exists already in the db, check the update time
+	function needsUpdate(post, callback){
+		callback(true);
 	}
 
-	//gets the post from the db, tests if it needs updating
-	function getFromDB(post, memo, callback) {
-		callback();
-	}
-
-	//fetches a post from tumblr.com
-	function getFromTumblr(post, memo, callback) {
+	//gets a post from tumblr and puts it in the db
+	function getFromTumblr(post, memo, topLevelCallback) {
 		fetch.get(post, function(retPost) {
 			//now put hte post in our DB
 			memo.tumblrGet++;
-			db.put(retPost, function() {
-				memo.dbPut++;
+			async.parallel([
+			function(putDBCallback) {
+				db.put(retPost, function() {
+					memo.dbPut++;
+					putDBCallback(null);
+				});
+			},
+			function(updateReblogsCallback) {
 				//console.log('post added: %d %s', retPost.id, retPost.blog_name);
-				updateReblogs(retPost, memo, callback);
+				updateReblogs(retPost, memo, updateReblogsCallback);
+			}], function(err) {
+				if(!err) {
+					topLevelCallback(null);
+				}
 			});
 		});
 	}
@@ -91,11 +98,11 @@ var async = require("async");
 				if(err) {
 					console.log(err)
 				} else {
-					topLevelCallback();
+					topLevelCallback(null);
 				}
 			});
 		} else {
-			topLevelCallback();
+			topLevelCallback(null);
 		}
 	}
 

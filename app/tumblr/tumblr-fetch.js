@@ -38,12 +38,13 @@ var http = require('http');
 		}
 		if(response.featured_in_tags) {
 			tags = tags.concat(response.featured_in_tags);
-			tags = tags.getUnique();
 		}
 		//make the tags lowercase
 		for(var i = 0; i < tags.length; i++) {
 			tags[i] = tags[i].toLowerCase().removeInvalidChars();
 		}
+		//get the unique ones
+		tags = tags.getUnique();
 		//go through all of the reblogs
 		var reblogs = [];
 		if(response.notes) {
@@ -198,7 +199,8 @@ var http = require('http');
 						callback(json.response);
 					}
 				} else {
-					throw new Error(body);
+					console.log("could not complete request. the post probably does not exist anymore");
+					//console.log(options);
 				}
 			});
 		});

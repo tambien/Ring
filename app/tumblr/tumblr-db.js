@@ -10,27 +10,34 @@ var async = require('async');
 	*/
 
 	//add all of the fields of a post into the appropriate database
-	function put(post, callback) {
+	function put(post, topLevelCallback) {
 		async.parallel([
-		function(callback) {
-			//add the post
-			insertPost(post, callback);
+		function(postCallback) {
+			//if the post exists, update it, otherwise, insert it
+			exists(post, function(inThere) {
+				if(inThere) {
+					updatePost(post, postCallback);
+				} else {
+					//postCallback(null);
+					insertPost(post, postCallback);
+				}
+			})
 		},
 
-		function(callback) {
+		function(reblogCallback) {
 			//register the reblogs
 			if(post.reblogged_from) {
-				insertReblog(post, callback);
+				insertReblogIfDoesNotExist(post, reblogCallback);
 			} else {
-				callback();
+				reblogCallback(null);
 			}
 		},
 
-		function(callback) {
+		function(tagCallback) {
 			async.each(post.tags, function(tag, callback) {
-				insertTagIfDoesNotExist(tag, post.id, post.blog_name, post.timestamp, callback);
-			}, callback);
-		}], callback);
+				insertTagIfDoesNotExist(tag, post, callback);
+			}, tagCallback);
+		}], topLevelCallback);
 
 	}
 
@@ -38,47 +45,74 @@ var async = require('async');
 	function insertPost(post, callback) {
 		db.connect(function(client) {
 			var updateTime = new Date();
-			client.query("INSERT INTO tumblr_posts (id, blog_name, note_count, text, photos, updated, url) VALUES ($1, $2, $3, $4, $5, $6, $7)", [post.id, post.blog_name, post.note_count, post.text, post.photo, updateTime, post.url], function(err, result) {
+			client.query("INSERT INTO tumblr_posts (id, blog_name, note_count, text, photo, url, updated) VALUES ($1, $2, $3, $4, $5, $6, $7)", [post.id, post.blog_name, post.note_count, post.text, post.photo, post.url, updateTime], function(err, result) {
 				if(err) {
 					console.log("could not add post %d %s to database: %s", post.id, post.blog_name, err);
 				} else {
-					callback();
+					callback(null);
 				}
 			});
+		});
+	}
+
+	//post is an object with these fields
+	function updatePost(post, callback) {
+		db.connect(function(client) {
+			var updateTime = new Date();
+			client.query("UPDATE tumblr_posts SET blog_name = $2, note_count = $3, url = $4, updated = $5 WHERE id = $1", [post.id, post.blog_name, post.note_count, post.url, updateTime], function(err, result) {
+				if(err) {
+					console.log("could not update post %d %s to database: %s", post.id, post.blog_name, err);
+				} else {
+					callback(null);
+				}
+			});
+		});
+	}
+
+	//reblogExists combined with insertReblog
+	function insertReblogIfDoesNotExist(post, callback) {
+		reblogExists(post, function(exists) {
+			if(!exists) {
+				insertReblog(post, callback);
+			} else {
+				callback(null);
+			}
 		});
 	}
 
 	//add all of the reblog connections
 	function insertReblog(post, callback) {
 		db.connect(function(client) {
-			client.query("INSERT INTO tumblr_reblogs (id, blog_name, reblog_id, reblog_name) VALUES ($1, $2, $3, $4)", [post.reblogged_from.id, post.reblogged_from.blog_name, post.id, post.blog_name], function(err, result) {
+			client.query("INSERT INTO tumblr_reblogs (id, reblog_id) VALUES ($1, $2)", [post.reblogged_from.id, post.id], function(err, result) {
 				if(err) {
 					console.log("could not add reblog to database: " + err);
 				} else {
-					callback();
+					callback(null);
 				}
 			});
 		});
 	}
 
 	//tagExists combined with insertTag
-	function insertTagIfDoesNotExist(hashtag, id, blog_name, timestamp, callback) {
-		tagExists(hashtag, id, blog_name, function(exists) {
+	function insertTagIfDoesNotExist(hashtag, post, callback) {
+		tagExists(hashtag, post.id, function(exists) {
 			if(!exists) {
-				insertTag(hashtag, id, blog_name, timestamp, callback);
+				insertTag(hashtag, post, callback);
+			} else {
+				callback(null);
 			}
 		});
 	}
 
 	//adds a tag to the database
-	function insertTag(hashtag, id, blog_name, timestamp, callback) {
-		var time = new Date(timestamp * 1000);
+	function insertTag(hashtag, post, callback) {
+		var time = new Date(post.timestamp * 1000);
 		db.connect(function(client) {
-			client.query("INSERT INTO tumblr_tags (tag, id, blog_name, timestamp) VALUES ($1, $2, $3, $4)", [hashtag, id, blog_name, time], function(err, result) {
+			client.query("INSERT INTO tumblr_tags (tag, id, timestamp) VALUES ($1, $2, $3)", [hashtag, post.id, time], function(err, result) {
 				if(err) {
 					console.log("could not add tag %s to database :%s", hashtag, err);
 				} else {
-					callback();
+					callback(null);
 				}
 			});
 		});
@@ -88,10 +122,10 @@ var async = require('async');
 	* GETTERS
 	*/
 
-	//get a post using the id and blog_name
+	//get a post using the id
 	function get(post, callback) {
 		db.connect(function(client) {
-			client.query("SELECT * FROM tumblr_posts WHERE id = $1 AND blog_name = $2", [post.id, post.blog_name], function(err, res) {
+			client.query("SELECT * FROM tumblr_posts WHERE id = $1", [post.id], function(err, res) {
 				if(err) {
 					console.log("could not determine if id exists: " + err);
 				} else {
@@ -112,8 +146,9 @@ var async = require('async');
 				post.note_count = retPost.note_count;
 				post.timestamp = retPost.timestamp;
 				post.text = retPost.text;
-				post.photo = retPost.photos;
+				post.photo = retPost.photo;
 				post.url = retPost.url;
+				post.updated = retPost.updated;
 				getPostCallback(null);
 			});
 		},
@@ -144,7 +179,7 @@ var async = require('async');
 
 	function getTagBetweenTime(tag, timeFrom, timeTo, callback) {
 		db.connect(function(client) {
-			client.query("SELECT id, blog_name FROM tumblr_tags WHERE tag = $1 AND timestamp BETWEEN $2 AND $3", [tag, timeFrom, timeTo], function(err, result) {
+			client.query("SELECT id FROM tumblr_tags WHERE tag = $1 AND timestamp BETWEEN $2 AND $3", [tag, timeFrom, timeTo], function(err, result) {
 				if(err) {
 					console.log("could not get tags in time range: %s", err);
 				} else {
@@ -157,7 +192,7 @@ var async = require('async');
 	//get all the reblogs for a post
 	function getReblogs(post, callback) {
 		db.connect(function(client) {
-			client.query("SELECT reblog_id, reblog_name FROM tumblr_reblogs WHERE id = $1 AND blog_name = $2", [post.id, post.blog_name], function(err, res) {
+			client.query("SELECT reblog_id FROM tumblr_reblogs WHERE id = $1", [post.id], function(err, res) {
 				if(err) {
 					console.log("could not get reposts: " + err);
 				} else {
@@ -172,18 +207,22 @@ var async = require('async');
 	//get all the tags for a post
 	function getTags(post, callback) {
 		db.connect(function(client) {
-			client.query("SELECT tag, timestamp FROM tumblr_tags WHERE id = $1 AND blog_name = $2", [post.id, post.blog_name], function(err, res) {
+			client.query("SELECT tag, timestamp FROM tumblr_tags WHERE id = $1", [post.id], function(err, res) {
 				if(err) {
 					console.log("could not get tag: " + err);
 				} else {
 					//put it into a single array
 					var rows = res.rows;
-					var tags = [];
-					for(var i = 0; i < rows.length; i++) {
-						tags.push(rows[i].tag);
+					if(rows.length > 0) {
+						var tags = [];
+						for(var i = 0; i < rows.length; i++) {
+							tags.push(rows[i].tag);
+						}
+						post.tags = tags;
+						post.timestamp = rows[0].timestamp;
+					} else {
+						post.tags = [];
 					}
-					post.tags = tags;
-					post.timestamp = rows[0].timestamp;
 					callback(post);
 				}
 			});
@@ -198,7 +237,7 @@ var async = require('async');
 	//returns boolean to the callback
 	function exists(post, callback) {
 		db.connect(function(client) {
-			client.query("SELECT * FROM tumblr_posts WHERE id = $1 AND blog_name = $2", [post.id, post.blog_name], function(err, res) {
+			client.query("SELECT * FROM tumblr_posts WHERE id = $1", [post.id], function(err, res) {
 				if(err) {
 					console.log("could not determine if id exists: " + err);
 				} else {
@@ -209,11 +248,23 @@ var async = require('async');
 	}
 
 	//tests if a tag is already in teh database
-	function tagExists(tag, id, blog_name, callback) {
+	function tagExists(tag, id, callback) {
 		db.connect(function(client) {
-			client.query("SELECT * FROM tumblr_tags WHERE id = $1 AND tag = $2 AND blog_name = $3", [id, tag, blog_name], function(err, res) {
+			client.query("SELECT * FROM tumblr_tags WHERE id = $1 AND tag = $2", [id, tag], function(err, res) {
 				if(err) {
 					console.log("could not determine if tag exists: " + err);
+				} else {
+					callback(res.rows.length > 0);
+				}
+			});
+		});
+	}
+
+	function reblogExists(post, callback) {
+		db.connect(function(client) {
+			client.query("SELECT * FROM tumblr_reblogs WHERE id = $1 AND reblog_id = $2", [post.reblogged_from.id, post.id], function(err, res) {
+				if(err) {
+					console.log("could not determine if a reblog exists: " + err);
 				} else {
 					callback(res.rows.length > 0);
 				}
