@@ -63,6 +63,7 @@ RING.Controls = Backbone.Model.extend({
 			var self = this;
 			this.request = $.ajax(reqString, {
 				success : function(response) {
+					console.log(response.tumblr.length)
 					RING.tumblrCollection.update(response.tumblr, {
 						merge : false,
 					});
@@ -75,6 +76,7 @@ RING.Controls = Backbone.Model.extend({
 			})
 		} else {
 			RING.tumblrCollection.update([]);
+			this.set("loading", false);
 		}
 
 	}
@@ -111,6 +113,7 @@ RING.DatePicker = Backbone.View.extend({
 	},
 
 	initialize : function() {
+		this.$title = $("<div id='title'>DATE RANGE</div>").appendTo(this.$el);
 		this.$slider = $("<div id='slider'></div>").appendTo(this.$el);
 		this.$el.appendTo($("#controls"));
 		this.render(this.model);

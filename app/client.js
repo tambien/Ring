@@ -36,6 +36,7 @@ var tags = require('./tags');
 						console.log(err)
 					} else {
 						//should remove all duplicate posts first
+						results.tumblr = removeDuplicates(results.tumblr)
 						res.send(results);
 					}
 				})
@@ -46,6 +47,19 @@ var tags = require('./tags');
 			default:
 				res.status(404).send('nope!');
 		}
+	}
+
+	function removeDuplicates(array) {
+		//make an array of just id's
+		var ids=[];
+		for (var i = 0; i < array.length; i++){
+			ids[i] = array[i].id;
+		}
+		//now filter if an id is in the other array and not at hte same position
+		array = array.filter(function(elem, pos, self) {
+			return ids.indexOf(elem.id) == pos;
+		})
+		return array;
 	}
 
 	/*

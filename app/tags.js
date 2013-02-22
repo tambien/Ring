@@ -45,6 +45,10 @@ var tumblr = require('./tumblr/tumblr-db');
 				var tumblrHashtags = item["gsx$tumblrhashtags"]["$t"];
 				tumblrHashtags = tumblrHashtags.split("/");
 				if(tumblrHashtags[0] !== '') {
+					//make them all lowercase
+					for (var j = 0; j < tumblrHashtags.length; j++){
+						tumblrHashtags[j] = tumblrHashtags[j].toLowerCase()
+					}
 					tumblrTags = tumblrTags.concat(tumblrHashtags);
 				} else {
 					tumblrHashtags = [];
@@ -52,6 +56,10 @@ var tumblr = require('./tumblr/tumblr-db');
 				var twitterHashtags = item["gsx$twitterhashtags"]["$t"];
 				twitterHashtags = twitterHashtags.split("/");
 				if(twitterHashtags[0] !== '') {
+					//make them all lowercase
+					for (var j = 0; j < twitterHashtags.length; j++){
+						twitterHashtags[j] = twitterHashtags[j].toLowerCase()
+					}
 					twitterTags = twitterTags.concat(twitterHashtags);
 				} else {
 					twitterHashtags = [];

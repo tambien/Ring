@@ -16,15 +16,14 @@ RING.TumblrCollection = Backbone.Collection.extend({
 	postAdded : function(model) {
 		//model.allLoaded();
 	},
-	postRemoved : function(post){
+	postRemoved : function(post) {
 		post.remove();
 	},
 	render : function() {
+
 		if(this.averageEnergy() > .1) {
 			this.forEach(function(model, index) {
-				model.applyHookesLaw();
-				model.applyCoulombsLaw();
-				//model.pushOutward()
+				model.applyPhysics();
 			});
 			this.forEach(function(model, index) {
 				model.updateVelocity();
@@ -38,7 +37,7 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		this.forEach(function(model, index) {
 			energy += model.totalEnergy();
 		});
-		return energy/this.length;
+		return energy / this.length;
 	},
 	allLoaded : function() {
 		this.forEach(function(model, index) {

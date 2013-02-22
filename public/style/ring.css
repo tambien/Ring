@@ -29,6 +29,16 @@ body {
 	top: 0px;
 	left: 0px;
 }
+#emuzelogo{
+	width: 64px;
+	height: 64px;
+	position: absolute;
+	margin-top: -32px;
+	margin-left: -32px;
+	top: 50%;
+	left: 50%;
+	z-index: 10000
+}
 /*
  * CONTROLS
  */
@@ -85,7 +95,16 @@ body {
 .datePicker #slider{
 	position: absolute;
 	left: 50px;
+	top: 30px;
 	width: 300px;
+}
+.datePicker #title{
+	position: absolute;
+	color: white;
+	font-family: sans-serif;
+	font-size: 14px;
+	left: 30px;
+	top: 0px;
 }
 /*
  * LOADING

@@ -22,20 +22,24 @@ RING.Tumblr = Backbone.Model.extend({
 		"reblog" : false,
 	},
 	initialize : function(attributes, options) {
+		console.log("added");
 		//check if the object is already in the collection
 		//setup the changes
 		this.on("change:timestamp", this.getPositionFromTime);
 		this.on("change:note_count", this.getSizeFromNoteCount);
+		this.on("change:x", this.updateRTreePosition);
+		this.on("change:y", this.updateRTreePosition);
+		this.on("change:size", this.updateRTreePosition);
 		//calculate the position
 		this.getSizeFromNoteCount();
-		this.view = new RING.Tumblr.View({
-			model : this,
-		});
 		//setup the force directed stuff
 		this.velocity = new THREE.Vector2(1, 1);
 		this.acceleration = new THREE.Vector2(0, 0);
-		this.updateRTreePosition();
 		this.cid = this.get("id");
+		//make the view
+		this.view = new RING.Tumblr.View({
+			model : this,
+		});
 	},
 	//called when all of the posts are loaded in the collection
 	allLoaded : function() {
@@ -44,7 +48,6 @@ RING.Tumblr = Backbone.Model.extend({
 			this.getPositionFromTime();
 			//this.view.drawEdgesToReblogs();
 		}
-
 	},
 	validate : function(attributes, options) {
 		//don't update the model to an out of date model
@@ -71,7 +74,6 @@ RING.Tumblr = Backbone.Model.extend({
 			});
 			this.positionReblogs(timeAngle, randomRadius);
 		}
-		this.updateRTreePosition();
 	},
 	positionReblogs : function(origAngle, origRadius) {
 		//position the reblogs also
@@ -92,10 +94,10 @@ RING.Tumblr = Backbone.Model.extend({
 		var count = this.get("note_count");
 		var size = 0;
 		if(!this.get("reblog")) {
-			size = count / 6 + 12;
+			size = Math.log(count) * 4 + 8;
 		} else {
 			var reblogs = this.get("reblogs").length;
-			size = count / 12 + 6 + reblogs;
+			size = Math.log(count) + 12 + reblogs;
 		}
 		this.set("size", size);
 	},
@@ -120,6 +122,13 @@ RING.Tumblr = Backbone.Model.extend({
 		RING.rtree.insert(this.boundingBox, this);
 	},
 	//FORCE-DIRECTED///////////////////////////////////////////////////////////
+	applyPhysics : function() {
+		//if(this.totalEnergy() > .01) {
+		this.applyHookesLaw();
+		this.applyCoulombsLaw();
+		//}
+
+	},
 	applyHookesLaw : function() {
 		//apply to each of the edges going to the reblogs
 		var reblogs = this.get("reblogs");
@@ -162,7 +171,6 @@ RING.Tumblr = Backbone.Model.extend({
 				x : x,
 				y : y,
 			});
-			this.updateRTreePosition();
 		}
 	},
 	applyCoulombsLaw : function() {
@@ -214,6 +222,9 @@ RING.Tumblr = Backbone.Model.extend({
 var PI2 = 2 * Math.PI;
 
 RING.Tumblr.View = Backbone.View.extend({
+	
+	className: "tumblrPost",
+	
 	events : {
 		//"click #canvas" : "clicked",
 	},
@@ -232,12 +243,15 @@ RING.Tumblr.View = Backbone.View.extend({
 		//the center is the vector which floats above the circle's center
 		this.lineCenter = this.object.position.clone().setZ(1);
 		this.position();
-		//add it to the scene
-		RING.scene.add(this.object);
 		//attach the callback when it's been clicked on
 		this.object.onclick = this.clicked.bind(this);
+		//add it to the scene
+		RING.scene.add(this.object);
 		//array of lines that connect reblogs
 		this.lines = [];
+	},
+	createElement : function() {
+
 	},
 	position : function() {
 		var x = this.model.get("x");
@@ -260,8 +274,6 @@ RING.Tumblr.View = Backbone.View.extend({
 	drawEdgesToReblogs : function() {
 		//if there are already lines, don't draw some more
 		if(this.lines.length === 0) {
-			//the line position is the same as the current position, but with z = 1;
-			this.line = this.object.position.clone().setZ(1);
 			var reblogs = this.model.get("reblogs");
 			for(var i = 0; i < reblogs.length; i++) {
 				var reblog = RING.tumblrCollection.get(reblogs[i].reblog_id);
@@ -288,10 +300,11 @@ RING.Tumblr.View = Backbone.View.extend({
 		//}
 	},
 	remove : function() {
+		console.log("removed");
 		//remove all of the objects that were added to the scene
+		RING.scene.remove(this.object);
 		for(var i = 0; i < this.lines.length; i++) {
 			RING.scene.remove(this.lines[i]);
 		}
-		RING.scene.remove(this.object);
 	}
 })
