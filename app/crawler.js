@@ -1,6 +1,6 @@
 var tumblr = require("./tumblr/tumblr");
 var async = require('async');
-var state = require('./state');
+var tags = require('./tags');
 /*
  * CRAWLER
  *
@@ -15,7 +15,7 @@ var state = require('./state');
 
 	//the starting point for a crawl
 	function tumblrCrawl(topLevelCallback) {
-		tumblr.searchTags(state.tags, function() {
+		tumblr.searchTags(tags.getTumblrTags(), function() {
 			topLevelCallback(null);
 		});
 	}

@@ -163,7 +163,7 @@ var http = require('http');
 		var options = {
 			host : 'api.tumblr.com',
 			port : 80,
-			path : '/v2/tagged?tag=' + hashtag + "&api_key=" + keys.tumblrAPIKey + "&limit=" + requestLimit,
+			path : '/v2/tagged?tag=' + encodeURIComponent(hashtag) + "&api_key=" + keys.tumblrAPIKey + "&limit=" + requestLimit,
 			method : 'GET',
 		};
 		makeRequest(options, function(response) {
@@ -202,7 +202,6 @@ var http = require('http');
 					}
 				} else {
 					console.log("could not complete request. the post probably does not exist anymore");
-					//console.log(options);
 				}
 			});
 		});

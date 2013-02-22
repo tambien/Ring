@@ -1,6 +1,6 @@
 var tumblrDB = require("./tumblr/tumblr-db");
 var async = require('async');
-var state = require('./state');
+var tags = require('./tags');
 
 /*
  * THIS IS THE DATABASE MANAGER THAT TALKS TO THE CLIENT
@@ -41,7 +41,7 @@ var state = require('./state');
 				})
 				break;
 			case "tags":
-				res.send(state.tags);
+				res.send(tags.getTags());
 				break;
 			default:
 				res.status(404).send('nope!');
@@ -65,15 +65,10 @@ var state = require('./state');
 			async.each(tags, function(tag, getTagsCallback) {
 				//make a request to the database for that tag
 				tumblrDB.getTagBetweenTime(tag, timeFrom, timeTo, function(posts) {
-					async.map(posts, function(post, postGetCallback) {
-						tumblrDB.getFull(post, function(retPost) {
-							getTumblrReblogs(retPost, results, function() {
-								postGetCallback(null, retPost);
-							})
-						});
-						//also needs all of the reblogs
+					async.each(posts, function(post, postGetCallback) {
+						getFullPost(post, results, postGetCallback);
 					}, function(err, retPosts) {
-						results.tumblr = results.tumblr.concat(retPosts);
+						//results.tumblr = results.tumblr.concat(retPosts);
 						getTagsCallback(null);
 					})
 				});
@@ -94,15 +89,21 @@ var state = require('./state');
 		});
 	}
 
+	function getFullPost(post, results, callback) {
+		tumblrDB.getFull(post, function(retPost) {
+			results.tumblr.push(retPost)
+			getTumblrReblogs(retPost, results, function() {
+				callback(null);
+			})
+		});
+	}
+
 	function getTumblrReblogs(post, results, topLevelCallback) {
 		async.each(post.reblogs, function(reblog, postGetCallback) {
-			var post = {
+			var newPost = {
 				id : reblog.reblog_id
 			}
-			tumblrDB.getFull(post, function(retPost) {
-				results.tumblr.push(retPost);
-				postGetCallback(null);
-			});
+			getFullPost(newPost, results, postGetCallback);
 		}, function(err) {
 			//results.tumblr = results.tumblr.concat(retPosts);
 			topLevelCallback(null);

@@ -10,14 +10,16 @@ var async = require('async');
 	*/
 
 	//add all of the fields of a post into the appropriate database
-	function put(post, topLevelCallback) {
+	function put(post, memo, topLevelCallback) {
 		async.parallel([
 		function(postCallback) {
 			//if the post exists, update it, otherwise, insert it
 			exists(post, function(inThere) {
 				if(inThere) {
+					memo.dbUpdate++;
 					updatePost(post, postCallback);
 				} else {
+					memo.dbPut++;
 					//postCallback(null);
 					insertPost(post, postCallback);
 				}
@@ -38,6 +40,7 @@ var async = require('async');
 				insertTagIfDoesNotExist(tag, post, callback);
 			}, tagCallback);
 		}], topLevelCallback);
+
 	}
 
 	//post is an object with these fields
@@ -143,8 +146,8 @@ var async = require('async');
 			get(post, function(retPost) {
 				//add the fields to the original post
 				post.note_count = retPost.note_count;
-				post.timestamp = retPost.timestamp;
 				post.text = retPost.text;
+				post.blog_name = retPost.blog_name;
 				post.photo = retPost.photo;
 				post.url = retPost.url;
 				post.reblog = retPost.reblog;
@@ -228,6 +231,19 @@ var async = require('async');
 			});
 		});
 	}
+	
+	//returns the number of items that are tagged with the tag
+	function getTagCount(tag, callback) {
+		db.connect(function(client) {
+			client.query("SELECT * FROM tumblr_tags WHERE tag = $1", [tag], function(err, res) {
+				if(err) {
+					console.log("could not get the number of tags: " + err);
+				} else {
+					callback(res.rows.length);
+				}
+			});
+		});
+	}
 
 	/*
 	* TESTS
@@ -267,6 +283,29 @@ var async = require('async');
 					console.log("could not determine if a reblog exists: " + err);
 				} else {
 					callback(res.rows.length > 0);
+				}
+			});
+		});
+	}
+
+	//tests if the post has not been updated in the past two hours
+	function needsUpdate(post, callback) {
+		db.connect(function(client) {
+			client.query("SELECT * FROM tumblr_posts WHERE id = $1", [post.id], function(err, res) {
+				if(err) {
+					console.log("could not determine if tag exists: " + err);
+				} else {
+					if(res.rows.length > 0) {
+						var updatedTime = new Date(res.rows[0].updated);
+						var now = new Date();
+						if((now - updatedTime) > 7200000) {
+							callback(true);
+						} else {
+							callback(false);
+						}
+					} else {
+						callback(true);
+					}
 				}
 			});
 		});
@@ -326,6 +365,8 @@ var async = require('async');
 	module.exports.getTags = getTags;
 
 	module.exports.getFull = getFull;
+	
+	module.exports.getTagCount = getTagCount;
 
 	/*
 	 * SETTERS
@@ -337,6 +378,8 @@ var async = require('async');
 	 * TESTS
 	 */
 	module.exports.exists = exists;
+
+	module.exports.needsUpdate = needsUpdate;
 
 	/*
 	 * DELETERS

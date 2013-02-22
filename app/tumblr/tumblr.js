@@ -56,10 +56,12 @@ var async = require("async");
 
 	function updatePost(post, memo, callback) {
 		//check if the post needs an update
-		needsUpdate(post, memo, function(update){
+		db.needsUpdate(post, function(update){
 			if (update){
 				getFromTumblr(post, memo, callback);
-			}	
+			} else {
+				callback(null);
+			}
 		})
 	}
 	
@@ -75,7 +77,7 @@ var async = require("async");
 			memo.tumblrGet++;
 			async.parallel([
 			function(putDBCallback) {
-				db.put(retPost, function() {
+				db.put(retPost, memo, function() {
 					putDBCallback(null);
 				});
 			},
@@ -92,6 +94,7 @@ var async = require("async");
 
 	function updateReblogs(post, memo, topLevelCallback) {
 		if(post.reblogs.length > 0 && !post.reblogged_from) {
+		//if(post.reblogs.length > 0) {
 			async.each(post.reblogs, function(reblog, callback) {
 				updatePost(reblog, memo, callback);
 			}, function(err) {
