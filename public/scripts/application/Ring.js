@@ -24,10 +24,8 @@ var RING = function() {
 		bindEvents();
 		//make the tumblr collection
 		RING.tumblrCollection = new RING.TumblrCollection();
-		//make the tags collection
-		RING.tags = new RING.Tags();
-		//getTags();
-
+		//make the controls
+		RING.controls = new RING.Controls();
 		//start the drawing
 		render();
 	}
@@ -42,8 +40,8 @@ var RING = function() {
 		RING.scene = new THREE.Scene();
 		projector = new THREE.Projector();
 		//the renderer
-		renderer = new THREE.CanvasRenderer();
-		$container.append(renderer.domElement);
+		RING.renderer = new THREE.CanvasRenderer();
+		$container.append(RING.renderer.domElement);
 		//initialize the size
 		sizeTHREE();
 	}
@@ -53,7 +51,7 @@ var RING = function() {
 		RING.height = $container.height();
 		camera.aspect = RING.width / RING.height;
 		camera.updateProjectionMatrix();
-		renderer.setSize(RING.width, RING.height);
+		RING.renderer.setSize(RING.width, RING.height);
 	}
 
 	var stats;
@@ -98,7 +96,7 @@ var RING = function() {
 		if(RING.dev) {
 			stats.update();
 		}
-		renderer.render(RING.scene, camera);
+		RING.renderer.render(RING.scene, camera);
 		//update tumblr collection
 		RING.tumblrCollection.render();
 	}
@@ -111,10 +109,6 @@ var RING = function() {
 	};
 
 }();
-
-RING.Controls = Backbone.Model.extend({
-	
-});
 
 //development version
 RING.dev = true;

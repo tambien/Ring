@@ -68,24 +68,6 @@ RING.Tag.View = Backbone.View.extend({
 });
 
 /*
- * DATE RANGE
- */
-
-RING.DateRange = Backbone.Model.extend({
-	defaults : {
-		"start" : new Date(2013, 2, 8),
-		"end" : new Date(),
-	},
-	initialize : function(attributes, options) {
-
-		//make the view
-		this.view = new RING.Tag.View({
-			model : this,
-		});
-	},
-});
-
-/*
  * TAGS COLLECTION
  */
 
@@ -103,9 +85,10 @@ RING.Tags = Backbone.Collection.extend({
 	},
 	getTags : function() {
 		var reqString = window.location + "get?type=tags";
+		var self = this;
 		$.ajax(reqString, {
 			success : function(response) {
-				RING.tags.update(response);
+				self.update(response);
 			},
 			error : function() {
 				console.error("could not fetch that data");
@@ -131,28 +114,13 @@ RING.Tags = Backbone.Collection.extend({
 				model.set('visible', true);
 			} else {
 				model.set('visible', false);
+				//if it's invisible it's not checked either
+				model.set('checked', false);
 			}
 		}
 	},
 	searchTags : function() {
-		console.log("searching");
+		//console.log("searching");
 	},
-	getTagsBetween : function(tags, timeFrom, timeTo) {
-		var obj = {
-			type : "range",
-			tags : tags,
-			start : timeFrom,
-			end : timeTo
-		}
-		var reqString = window.location + "get?" + decodeURIComponent($.param(obj));
-		$.ajax(reqString, {
-			success : function(response) {
-				RING.tumblrCollection.update(response.tumblr);
-				RING.tumblrCollection.allLoaded();
-			},
-			error : function() {
-				console.error("could not fetch that data");
-			}
-		})
-	}
+	
 });

@@ -22,13 +22,12 @@ RING.Tumblr = Backbone.Model.extend({
 		"reblog" : false,
 	},
 	initialize : function(attributes, options) {
+		//check if the object is already in the collection
 		//setup the changes
 		this.on("change:timestamp", this.getPositionFromTime);
 		this.on("change:note_count", this.getSizeFromNoteCount);
 		//calculate the position
-		//this.getPositionFromTime();
 		this.getSizeFromNoteCount();
-		//setup the view
 		this.view = new RING.Tumblr.View({
 			model : this,
 		});
@@ -36,27 +35,26 @@ RING.Tumblr = Backbone.Model.extend({
 		this.velocity = new THREE.Vector2(1, 1);
 		this.acceleration = new THREE.Vector2(0, 0);
 		this.updateRTreePosition();
+		this.cid = this.get("id");
 	},
 	//called when all of the posts are loaded in the collection
 	allLoaded : function() {
-		this.getPositionFromTime();
-		this.view.drawEdgesToReblogs();
-	},
-	update : function() {
-		if(this.get("reblog")) {
-
+		if(this.get("x") === 0 && this.get("y") === 0) {
+			this.getSizeFromNoteCount();
+			this.getPositionFromTime();
+			//this.view.drawEdgesToReblogs();
 		}
+
 	},
 	validate : function(attributes, options) {
 		//don't update the model to an out of date model
-		if(attributes.timestamp < this.get("timestamp")) {
-			console.log("outdated model")
+		if(attributes.timestamp < this.previous("timestamp")) {
 			return false;
 		}
 	},
 	//called when a model is removed from the collection
 	remove : function() {
-
+		this.view.remove();
 	},
 	//sets the x and y based on the time + a little randomness
 	getPositionFromTime : function() {
@@ -238,6 +236,8 @@ RING.Tumblr.View = Backbone.View.extend({
 		RING.scene.add(this.object);
 		//attach the callback when it's been clicked on
 		this.object.onclick = this.clicked.bind(this);
+		//array of lines that connect reblogs
+		this.lines = [];
 	},
 	position : function() {
 		var x = this.model.get("x");
@@ -258,24 +258,25 @@ RING.Tumblr.View = Backbone.View.extend({
 	},
 	//draw edges to the connected reposts
 	drawEdgesToReblogs : function() {
-		//remove this object from the scene
-		this.lines = [];
-		//the line position is the same as the current position, but with z = 1;
-		this.line = this.object.position.clone().setZ(1);
-		var reblogs = this.model.get("reblogs");
-		for(var i = 0; i < reblogs.length; i++) {
-			var reblog = RING.tumblrCollection.get(reblogs[i].reblog_id);
-			if(reblog) {
-				var geometry = new THREE.Geometry();
-				geometry.vertices.push(this.lineCenter);
-				geometry.vertices.push(reblog.view.lineCenter);
-				var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
-					color : 0xffffff,
-					opacity : .5,
-					linewidth : 1.5,
-				}));
-				RING.scene.add(line);
-				this.lines.push(line);
+		//if there are already lines, don't draw some more
+		if(this.lines.length === 0) {
+			//the line position is the same as the current position, but with z = 1;
+			this.line = this.object.position.clone().setZ(1);
+			var reblogs = this.model.get("reblogs");
+			for(var i = 0; i < reblogs.length; i++) {
+				var reblog = RING.tumblrCollection.get(reblogs[i].reblog_id);
+				if(reblog) {
+					var geometry = new THREE.Geometry();
+					geometry.vertices.push(this.lineCenter);
+					geometry.vertices.push(reblog.view.lineCenter);
+					var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+						color : 0xffffff,
+						opacity : .5,
+						linewidth : 1.5,
+					}));
+					RING.scene.add(line);
+					this.lines.push(line);
+				}
 			}
 		}
 	},

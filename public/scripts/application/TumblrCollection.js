@@ -13,10 +13,11 @@ RING.TumblrCollection = Backbone.Collection.extend({
 			model.connectToReblogs();
 		});
 	},
-	postAdded : function(post) {
-
-		//add the node to the graph
-		post.node
+	postAdded : function(model) {
+		//model.allLoaded();
+	},
+	postRemoved : function(post){
+		post.remove();
 	},
 	render : function() {
 		if(this.averageEnergy() > .1) {
@@ -42,6 +43,9 @@ RING.TumblrCollection = Backbone.Collection.extend({
 	allLoaded : function() {
 		this.forEach(function(model, index) {
 			model.allLoaded();
+		});
+		this.forEach(function(model, index) {
+			model.view.drawEdgesToReblogs();
 		});
 	}
 });
