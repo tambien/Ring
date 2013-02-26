@@ -4,30 +4,29 @@
  * a model representing a single tag
  */
 
-RING.Tag = Backbone.Model.extend({
+RING.Artist = Backbone.Model.extend({
 	defaults : {
 		"checked" : false,
-		"artist" : "",
-		"tumblrhashtags" : [],
-		"twitterhandle" : "",
-		"twitterhashtags" : "",
-		"color" : "#ffffff",
+		"name" : "",
+		"search" : [],
+		"handle" : "",
 		"count" : 0,
+		"color" : "#fff",
 		"visible" : false,
 	},
 	initialize : function(attributes, options) {
 
 		//make the view
-		this.view = new RING.Tag.View({
+		this.view = new RING.Artist.View({
 			model : this,
 		});
 	},
 });
 
 /*
- * TAG VIEW
+ * ARTIST VIEW
  */
-RING.Tag.View = Backbone.View.extend({
+RING.Artist.View = Backbone.View.extend({
 
 	className : "tag",
 
@@ -40,7 +39,7 @@ RING.Tag.View = Backbone.View.extend({
 		this.listenTo(this.model, "change", this.render);
 		this.listenTo(this.model, "change:visible", this.addOrRemove);
 		this.$checkbox = $("<div class='checkbox'></div>").appendTo(this.$el);
-		this.$artist = $("<div class='artist'>" + this.model.get("artist") + "</div>").appendTo(this.$el);
+		this.$artist = $("<div class='artist'>" + this.model.get("name") + "</div>").appendTo(this.$el);
 		//render for the first time
 		this.render(this.model);
 	},
@@ -68,27 +67,28 @@ RING.Tag.View = Backbone.View.extend({
 });
 
 /*
- * TAGS COLLECTION
+ * ARTIST COLLECTION
  */
 
-RING.Tags = Backbone.Collection.extend({
+RING.Artists = Backbone.Collection.extend({
 
-	model : RING.Tag,
+	model : RING.Artist,
 
 	initialize : function(models, options) {
 		//get the tags initially
-		this.getTags();
+		this.getArtists();
 		//make a request whenever there is a change in the tags
-		this.on("add", this.makeVisible);
-		this.on("change:checked", this.searchTags);
+		//this.on("add", this.makeVisible);
 		//this.listenTo("change:checked", this.searchTags);
 	},
-	getTags : function() {
-		var reqString = window.location + "get?type=tags";
+	getArtists : function() {
+		var reqString = window.location + "get?type=artists";
 		var self = this;
 		$.ajax(reqString, {
 			success : function(response) {
+				console.log("artist list loaded");
 				self.update(response);
+				self.makeVisible();
 			},
 			error : function() {
 				console.error("could not fetch that data");
@@ -110,7 +110,7 @@ RING.Tags = Backbone.Collection.extend({
 		//make the most popular posts visible in the list
 		for(var i = 0; i < this.length; i++) {
 			var model = this.models[i];
-			if(i < 24) {
+			if(i < 26) {
 				model.set('visible', true);
 			} else {
 				model.set('visible', false);
@@ -119,8 +119,4 @@ RING.Tags = Backbone.Collection.extend({
 			}
 		}
 	},
-	searchTags : function() {
-		//console.log("searching");
-	},
-	
 });

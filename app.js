@@ -1,7 +1,7 @@
 var express = require('express');
 var crawler = require('./app/crawler');
 var client = require('./app/client');
-var tags = require('./app/tags');
+var artists = require('./app/artists');
 var fs = require('fs');
 var app = express();
 
@@ -30,16 +30,18 @@ app.listen(3000, "127.0.0.1");
 //and periodic crawling and tag updating
 setInterval(function() {
 	//retrieve the tags from the google spreadsheet
-	tags.retrieve(function() {
+	artists.retrieve(function() {
 		crawler.update(function(err) {
 			if(err) {
 				console.log(err);
 			}
 		});
 	});
-}, 600000);
-//retrieve the tags from the google spreadsheet
-tags.retrieve(function() {
+	//every 30 minutes
+}, 30*60*1000);
+//retrieve the artists from the google spreadsheet
+artists.retrieve(function() {
+	//and then crawl with those artists
 	crawler.update(function(err) {
 		if(err) {
 			console.log(err);

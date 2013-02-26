@@ -11,7 +11,7 @@ RING.Tumblr = Backbone.Model.extend({
 		"blog_name" : "",
 		"photo" : "",
 		"url" : "",
-		"tags" : [],
+		"artist" : '',
 		"reblogs" : [],
 		"text" : "",
 		"timestamp" : 0,
@@ -22,8 +22,6 @@ RING.Tumblr = Backbone.Model.extend({
 		"reblog" : false,
 	},
 	initialize : function(attributes, options) {
-		console.log("added");
-		//check if the object is already in the collection
 		//setup the changes
 		this.on("change:timestamp", this.getPositionFromTime);
 		this.on("change:note_count", this.getSizeFromNoteCount);
@@ -222,9 +220,9 @@ RING.Tumblr = Backbone.Model.extend({
 var PI2 = 2 * Math.PI;
 
 RING.Tumblr.View = Backbone.View.extend({
-	
-	className: "tumblrPost",
-	
+
+	className : "tumblrPost",
+
 	events : {
 		//"click #canvas" : "clicked",
 	},
@@ -234,6 +232,18 @@ RING.Tumblr.View = Backbone.View.extend({
 		this.listenTo(this.model, "change:x", this.position);
 		this.listenTo(this.model, "change:y", this.position);
 		//make the THREE.js object
+		//var material = new THREE.ParticleBasicMaterial( { map: new THREE.Texture( generateSprite() ), blending: THREE.AdditiveBlending } );
+		//var texture = THREE.ImageUtils.loadTexture('./images/circle.png');
+		//var geometry = new THREE.CircleGeometry(1, 10);
+		/*
+		 var t = THREE.ImageUtils.loadTexture('./images/whitecircle.png');
+		 var material = new THREE.SpriteMaterial({
+		 map : t,
+		 useScreenCoordinates : false,
+		 color : 0xffffff,
+		 });
+		 this.object = new THREE.Sprite(material);
+		 */
 		this.object = new THREE.Particle(new THREE.ParticleCanvasMaterial({
 			color : Math.random() * 0x808080 + 0x808080,
 			program : this.draw.bind(this),
@@ -270,6 +280,21 @@ RING.Tumblr.View = Backbone.View.extend({
 		//}
 
 	},
+	drawCanvas : function() {
+		var canvas = document.createElement('canvas');
+		var radius = 25;
+		canvas.width = radius * 2;
+		canvas.height = radius * 2;
+
+		var context = canvas.getContext('2d');
+		context.beginPath();
+		context.arc(radius, radius, radius, 0, PI2, false);
+		context.closePath();
+		context.fillStyle = "#f00"
+		context.fill();
+
+		return canvas;
+	},
 	//draw edges to the connected reposts
 	drawEdgesToReblogs : function() {
 		//if there are already lines, don't draw some more
@@ -300,7 +325,6 @@ RING.Tumblr.View = Backbone.View.extend({
 		//}
 	},
 	remove : function() {
-		console.log("removed");
 		//remove all of the objects that were added to the scene
 		RING.scene.remove(this.object);
 		for(var i = 0; i < this.lines.length; i++) {

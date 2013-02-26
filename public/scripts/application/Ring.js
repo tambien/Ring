@@ -24,6 +24,7 @@ var RING = function() {
 		bindEvents();
 		//make the tumblr collection
 		RING.tumblrCollection = new RING.TumblrCollection();
+		RING.twitterCollection = new RING.TwitterCollection();
 		//make the controls
 		RING.controls = new RING.Controls();
 		//start the drawing
@@ -98,7 +99,7 @@ var RING = function() {
 		}
 		RING.renderer.render(RING.scene, camera);
 		//update tumblr collection
-		RING.tumblrCollection.render();
+		//RING.tumblrCollection.render();
 	}
 
 	//API//////////////////////////////////////////////////////////////////////

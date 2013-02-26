@@ -30,21 +30,7 @@ var http = require('http');
 	 * 	url,
 	 * }
 	 */
-	function parsePost(response) {
-		//combine the featured tags and the tags
-		var tags = [];
-		if(response.tags) {
-			tags = response.tags;
-		}
-		if(response.featured_in_tags) {
-			tags = tags.concat(response.featured_in_tags);
-		}
-		//make the tags lowercase
-		for(var i = 0; i < tags.length; i++) {
-			tags[i] = tags[i].toLowerCase().removeInvalidChars();
-		}
-		//get the unique ones
-		tags = tags.getUnique();
+	function parsePost(response, artist) {
 		//go through all of the reblogs
 		var reblogs = [];
 		if(response.notes) {
@@ -62,14 +48,7 @@ var http = require('http');
 				}
 			}
 		}
-		var reblogged_from = null;
-		if(response.reblogged_from_id) {
-			reblogged_from = {
-				id : response.reblogged_from_id,
-				blog_name : response.reblogged_from_name
-			}
-		}
-		var reblog = reblogged_from!==null;
+		var reblogged_from = response.reblogged_from_id ? response.reblogged_from_id : null;
 		//do the text formatting
 		var text = '';
 
@@ -92,11 +71,11 @@ var http = require('http');
 		if(response.photos) {
 			//find the image with the right width
 			var alt_sizes = response.photos[0].alt_sizes;
-			for (var i = 0; i < alt_sizes.length; i++){
-				if (alt_sizes[i].width===250){
+			for(var i = 0; i < alt_sizes.length; i++) {
+				if(alt_sizes[i].width === 250) {
 					photo = alt_sizes[i].url;
 					break;
-				} 
+				}
 			}
 		}
 		var post = {
@@ -104,13 +83,12 @@ var http = require('http');
 			blog_name : response.blog_name,
 			timestamp : response.timestamp,
 			note_count : response.note_count,
-			tags : tags,
 			reblogs : reblogs,
 			text : text,
 			photo : photo,
 			url : response.post_url,
 			reblogged_from : reblogged_from,
-			reblog : reblog,
+			artist : artist,
 		};
 		return post;
 	}
@@ -119,20 +97,18 @@ var http = require('http');
 	function get(post, callback) {
 		var id = post.id;
 		var blog_name = post.blog_name;
-
+		var artist = post.artist;
 		var options = {
 			host : 'api.tumblr.com',
 			port : 80,
 			path : '/v2/blog/' + blog_name + ".tumblr.com/posts?api_key=" + keys.tumblrAPIKey + "&id=" + id + "&notes_info=true&reblog_info=true&filter=text",
 			method : 'GET',
-		};
+		};	
 		makeRequest(options, function(response) {
 			//parse the response
-			var post = parsePost(response.posts[0]);
+			var post = parsePost(response.posts[0], artist);
 			//call the callback if it exists
-			if(callback) {
-				callback(post);
-			}
+			callback(post);
 		});
 	}
 
@@ -151,9 +127,7 @@ var http = require('http');
 			//parse the response
 			var post = parsePost(response.posts[0]);
 			//call the callback if it exists
-			if(callback) {
-				callback(post);
-			}
+			callback(post);
 		});
 	}
 
@@ -197,11 +171,9 @@ var http = require('http');
 			res.on('end', function() {
 				if(res.statusCode == 200 || res.statusCode == 301) {
 					var json = JSON.parse(body);
-					if(callback) {
-						callback(json.response);
-					}
+					callback(json.response);
 				} else {
-					console.log("could not complete request. the post probably does not exist anymore");
+					console.log("could not complete request. " + res.statusCode);
 				}
 			});
 		});

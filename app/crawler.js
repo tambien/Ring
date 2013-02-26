@@ -1,6 +1,7 @@
 var tumblr = require("./tumblr/tumblr");
+var twitter = require('./twitter/twitter.js');
 var async = require('async');
-var tags = require('./tags');
+var artists = require('./artists');
 /*
  * CRAWLER
  *
@@ -15,7 +16,7 @@ var tags = require('./tags');
 
 	//the starting point for a crawl
 	function tumblrCrawl(topLevelCallback) {
-		tumblr.searchTags(tags.getTumblrTags(), function() {
+		tumblr.searchArtists(artists.getArtists(), function() {
 			topLevelCallback(null);
 		});
 	}
@@ -26,7 +27,7 @@ var tags = require('./tags');
 
 	//the starting point for a crawl
 	function twitterCrawl(topLevelCallback) {
-		topLevelCallback(null)
+		twitter.refreshHandles(topLevelCallback);
 	}
 
 	/*
@@ -35,7 +36,7 @@ var tags = require('./tags');
 	module.exports.update = function(topLevelCallback) {
 		console.log("updating database " + new Date());
 
-		async.series([
+		async.parallel([
 
 		function(tumblrCrawlCallback) {
 			tumblrCrawl(tumblrCrawlCallback);
