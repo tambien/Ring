@@ -104,13 +104,21 @@ var async = require("async");
 
 	function updatePost(post, memo, callback) {
 		//check if the post needs an update
-		db.needsUpdate(post, function(update) {
-			if(update) {
-				getFromTumblr(post, memo, callback);
-			} else {
-				callback(null);
-			}
-		})
+		//if it's older than 2 months, it does not need to be updated
+		var postTime = new Date(post.timestamp * 1000);
+		var now = new Date();
+		var lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+		if(postTime > lastMonth) {
+			db.needsUpdate(post, function(update) {
+				if(update) {
+					getFromTumblr(post, memo, callback);
+				} else {
+					callback(null);
+				}
+			})
+		} else {
+			callback(null);
+		}
 	}
 
 	//gets a post from tumblr and puts it in the db

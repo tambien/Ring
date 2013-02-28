@@ -64,6 +64,18 @@ var database = require('../database');
 			});
 		});
 	}
+	
+	function getArtistBetweenTimeCount(artist, timeFrom, timeTo, callback) {
+		database.connect(function(client) {
+			client.query("SELECT count(*) FROM tweets WHERE artist = $1 AND timestamp BETWEEN $2 AND $3", [artist, timeFrom, timeTo], function(err, result) {
+				if(err) {
+					console.log("could not get tags in time range: %s", err);
+				} else {
+					callback(result.rows[0].count);
+				}
+			});
+		});
+	}
 
 	/*
 	* TESTS
@@ -72,11 +84,11 @@ var database = require('../database');
 	//returns boolean to the callback
 	function exists(tweet, callback) {
 		database.connect(function(client) {
-			client.query("SELECT * FROM tweets WHERE id = $1", [tweet.id], function(err, res) {
+			client.query("SELECT count(*) FROM tweets WHERE id = $1", [tweet.id], function(err, res) {
 				if(err) {
 					console.log("could not determine if id exists: " + err);
 				} else {
-					callback(res.rows.length > 0);
+					callback(res.rows[0].count > 0);
 				}
 			});
 		});
@@ -88,5 +100,7 @@ var database = require('../database');
 	module.exports.put = put;
 
 	module.exports.getArtistBetweenTime = getArtistBetweenTime;
+	
+	module.exports.getArtistBetweenTimeCount = getArtistBetweenTimeCount;
 
 }())

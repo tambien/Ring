@@ -88,14 +88,13 @@ var async = require('async');
 	}
 
 
-	//returns the number of items that are tagged with the tag that are in the past week
-	function getArtistCount(artist, callback) {
+	function getArtistBetweenTimeCount(artist, timeFrom, timeTo, callback) {
 		db.connect(function(client) {
-			client.query("SELECT * FROM tumblr_posts WHERE artist = $1", [artist], function(err, res) {
+			client.query("SELECT count(*) FROM tumblr_posts WHERE artist = $1 AND timestamp BETWEEN $2 AND $3", [artist, timeFrom, timeTo], function(err, result) {
 				if(err) {
-					console.log("could not get the number of artists: " + err);
+					console.log("could not get tags in time range: %s", err);
 				} else {
-					callback(res.rows.length);
+					callback(result.rows[0].count);
 				}
 			});
 		});
@@ -109,11 +108,11 @@ var async = require('async');
 	//returns boolean to the callback
 	function exists(post, callback) {
 		db.connect(function(client) {
-			client.query("SELECT * FROM tumblr_posts WHERE id = $1", [post.id], function(err, res) {
+			client.query("SELECT count(*) FROM tumblr_posts WHERE id = $1", [post.id], function(err, res) {
 				if(err) {
 					console.log("could not determine if id exists: " + err);
 				} else {
-					callback(res.rows.length > 0);
+					callback(res.rows[0].count > 0);
 				}
 			});
 		});
@@ -167,10 +166,12 @@ var async = require('async');
 	module.exports.get = get;
 	
 	module.exports.getArtistBetweenTime = getArtistBetweenTime;
+	
+	module.exports.getArtistBetweenTimeCount = getArtistBetweenTimeCount;
 
 	module.exports.getFull = get;
 
-	module.exports.getArtistCount = getArtistCount;
+	//module.exports.getArtistCount = getArtistCount;
 
 	/*
 	 * SETTERS

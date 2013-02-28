@@ -15,6 +15,7 @@ RING.Twitter = Backbone.Model.extend({
 		"x" : 0,
 		"y" : 0,
 		"size" : 0,
+		"visible" : false,
 	},
 	initialize : function(attributes, options) {
 		//setup the changes
@@ -81,6 +82,7 @@ RING.Twitter.View = Backbone.View.extend({
 		//trigger callbacks on repositioning
 		this.listenTo(this.model, "change:x", this.position);
 		this.listenTo(this.model, "change:y", this.position);
+		this.listenTo(this.model, "change:visible", this.setVisible);
 		//make the THREE.js object
 		this.object = new THREE.Particle(new THREE.ParticleCanvasMaterial({
 			color : Math.random() * 0x808080 + 0x808080,
@@ -91,6 +93,8 @@ RING.Twitter.View = Backbone.View.extend({
 		this.position();
 		//attach the callback when it's been clicked on
 		this.object.onclick = this.clicked.bind(this);
+		//the objects are initially not visible
+		this.object.visible = false;
 		//add it to the scene
 		RING.scene.add(this.object);
 	},
@@ -115,5 +119,8 @@ RING.Twitter.View = Backbone.View.extend({
 	},
 	remove : function() {
 		RING.scene.remove(this.object);
+	}, 
+	setVisible : function(model, visible) {
+		this.object.visible = visible;
 	}
 })

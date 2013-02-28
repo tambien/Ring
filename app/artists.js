@@ -13,6 +13,8 @@ var twitter = require('./twitter/twitter-db');
 
 	// all of the arrays of tag pieces
 	var artists = [];
+	
+	var artistNames = [];
 
 	var searches = [];
 
@@ -35,6 +37,11 @@ var twitter = require('./twitter/twitter-db');
 	function getSearches() {
 		return searches;
 	}
+	
+	function getArtistNames(){
+		return artistNames;
+	}
+	
 
 	//returns all of the tumblr tags that we are tracking
 	function getHandles() {
@@ -45,6 +52,17 @@ var twitter = require('./twitter/twitter-db');
 		}
 		return handles;
 	}
+
+	function sortArtists(tmpArtists) {
+		tmpArtists.sort(function(a, b) {
+			return  b.count - a.count;
+		});
+	}
+
+	//get top 26
+	function getTopArtists() {
+		return artists.slice(0, 26);
+	};
 
 	//gets the tags from the google doc
 	//OLD - https://spreadsheets.google.com/feeds/list/0AiVz2Kh7uRRBdHliYVFpeGNGNFlqelBxb09MaFFTYXc/od6/public/values?alt=json
@@ -86,9 +104,16 @@ var twitter = require('./twitter/twitter-db');
 					tmpArtists.push(artist);
 				}
 			}
-			getCount(tmpArtists, function(){
+			getCount(tmpArtists, function() {
+				//sort the artists
+				sortArtists(tmpArtists);
+				//put the artist names in a list
+				artistNames = [];
+				for (var i = 0; i < tmpArtists.length; i++){
+					artistNames.push(tmpArtists[i].name);
+				}
 				artists = tmpArtists;
-				callback();	
+				callback();
 			});
 		})
 	}
@@ -113,9 +138,9 @@ var twitter = require('./twitter/twitter-db');
 		var timeFrom = new Date(now.getFullYear(), now.getMonth(), parseInt(now.getDate()) - 14);
 		var timeTo = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 		//iterate over the tags
-		async.each(artistList, function(artistObj, gotArtistCallback) {
-			tumblr.getArtistBetweenTime(artistObj.name, timeFrom, timeTo, function(response) {
-				artistObj.count += response.length;
+		async.eachSeries(artistList, function(artistObj, gotArtistCallback) {
+			tumblr.getArtistBetweenTimeCount(artistObj.name, timeFrom, timeTo, function(response) {
+				artistObj.count += response;
 				gotArtistCallback(null);
 			})
 		}, topLevelCallback)
@@ -126,9 +151,9 @@ var twitter = require('./twitter/twitter-db');
 		var timeFrom = new Date(now.getFullYear(), now.getMonth(), parseInt(now.getDate()) - 14);
 		var timeTo = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 		//iterate over the tags
-		async.each(artistList, function(artistObj, gotArtistCallback) {
-			twitter.getArtistBetweenTime(artistObj.name, timeFrom, timeTo, function(response) {
-				artistObj.count += response.length;
+		async.eachSeries(artistList, function(artistObj, gotArtistCallback) {
+			twitter.getArtistBetweenTimeCount(artistObj.name, timeFrom, timeTo, function(response) {
+				artistObj.count += response;
 				gotArtistCallback(null);
 			})
 		}, topLevelCallback)
@@ -176,7 +201,9 @@ var twitter = require('./twitter/twitter-db');
 
 	module.exports.retrieve = retrieve;
 
-	//module.exports.getTumblrTags = getTumblrTags;
+	module.exports.getTopArtists = getTopArtists;
+
+	module.exports.getArtistNames = getArtistNames;
 
 	//module.exports.getTwitterHandles = getTwitterHandles;
 

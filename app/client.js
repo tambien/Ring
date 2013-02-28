@@ -28,15 +28,94 @@ var artists = require('./artists');
 					}
 				})
 				break;
-			case "artists":
-				res.send(artists.getArtists());
+			case "week":
+				var results = {
+					tumblr : [],
+					twitter : []
+				};
+				getArtistPastWeek(query.artist, results, function(err) {
+					if(err) {
+						console.log(err)
+					} else {
+						res.send(results);
+					}
+				})
 				break;
-			case "handles":
-				res.send(artists.getHandles());
+			case "cache":
+				res.send(cache);
+				break;
+			case "twitter":
+				res.send(cache.twitter);
+				break;
+			case "tumblr":
+				res.send(cache.tumblr);
+				break;
+			case "artists":
+				res.send(artists.getArtistNames());
+				break;
+			case "top":
+				res.send(artists.getTopArtists());
 				break;
 			default:
 				res.status(404).send('nope!');
 		}
+	}
+
+	/*
+	 * CACHE
+	 *
+	 * cache the searches for tumblr and twitter so they won't be done on every connection
+	 */
+
+	var cache = {
+		lastUpdate : 0,
+		tumblr : [],
+		twitter : []
+	};
+
+	//put everything in the tmpCache until it's all completed
+	var tmpCache = {
+		lastUpdate : 0,
+		tumblr : [],
+		twitter : []
+	};
+
+	function cachePastWeek(topLevelCallback) {
+		var topArtists = artists.getTopArtists();
+		async.each(topArtists, function(artist, callback) {
+			getArtistPastWeek(artist.name, tmpCache, callback);
+		}, function() {
+			tmpCache.lastUpdate = new Date();
+			cache = tmpCache;
+			//empty the tmp cache
+			tmpCache = {
+				lastUpdate : 0,
+				tumblr : [],
+				twitter : []
+			};
+			topLevelCallback();
+		})
+	}
+
+	function getArtistPastWeek(artist, results, topLevelCallback) {
+		var timeTo = new Date();
+		var timeFrom = new Date(timeTo.getFullYear(), timeTo.getMonth(), parseInt(timeTo.getDate()) - 7);
+		async.parallel([
+		function(tumblrGetCallback) {
+			tumblrDB.getArtistBetweenTime(artist, timeFrom, timeTo, function(posts) {
+				results.tumblr = results.tumblr.concat(posts);
+				tumblrGetCallback(null);
+			});
+		},
+
+		function(twitterGetCallback) {
+			twitterDB.getArtistBetweenTime(artist, timeFrom, timeTo, function(tweets) {
+				results.twitter = results.twitter.concat(tweets);
+				twitterGetCallback(null);
+			});
+		}], function() {
+			topLevelCallback(null)
+		})
 	}
 
 	/*
@@ -86,4 +165,6 @@ var artists = require('./artists');
 
 	//module.exports.getTagBetweenTime = getTagBetweenTime;
 	module.exports.get = get;
+
+	module.exports.cachePastWeek = cachePastWeek;
 }());

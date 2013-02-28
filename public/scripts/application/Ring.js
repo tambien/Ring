@@ -10,8 +10,6 @@ $(function() {
 var RING = function() {
 
 	var $container;
-	
-	var rtree = new RTree(10);
 
 	//INITIALIZATION///////////////////////////////////////////////////////////
 
@@ -106,7 +104,6 @@ var RING = function() {
 
 	return {
 		initialize : initialize,
-		rtree : rtree,
 	};
 
 }();

@@ -1,4 +1,5 @@
 var express = require('express');
+var async = require('async')
 var crawler = require('./app/crawler');
 var client = require('./app/client');
 var artists = require('./app/artists');
@@ -27,26 +28,58 @@ app.use(express.static(__dirname + '/public'));
 //start the server
 app.listen(3000, "127.0.0.1");
 
-//and periodic crawling and tag updating
-setInterval(function() {
-	//retrieve the tags from the google spreadsheet
+//on startup
+//update the artist list from the spreadsheet
+async.series([
+function(getArtistList) {
 	artists.retrieve(function() {
-		crawler.update(function(err) {
-			if(err) {
-				console.log(err);
-			}
-		});
+		console.log("got the artists from the spreadsheet");
+		getArtistList();
 	});
-	//every 30 minutes
-}, 30*60*1000);
-//retrieve the artists from the google spreadsheet
-artists.retrieve(function() {
-	//and then crawl with those artists
+},
+
+//update the cache
+function(getCache) {
+	client.cachePastWeek(function() {
+		console.log('cached past week');
+		getCache();
+	})
+},
+
+//do an initial crawl
+function(crawlInitially) {
 	crawler.update(function(err) {
+		console.log('crawl completed');
+		crawlInitially();
 		if(err) {
 			console.log(err);
 		}
 	});
+}], function() {
+	console.log("finished initial retrieval and crawl");
 });
+//updating the database every 30 minutes
+setInterval(function() {
+	crawler.update(function(err) {
+		console.log('crawl completed')
+		if(err) {
+			console.log(err);
+		}
+	});
+	//every 30 minutes
+}, 30 * 60 * 1000);
+//update the list from the spreadsheet every 2 hours
+setInterval(function() {
+	artists.retrieve(function() {
+		console.log("got the artists from the spreadsheet");
+	});
+	//every 2 hours
+}, 2 * 60 * 60 * 1000);
+//update the cache every 20 minutes
+setInterval(function() {
+	client.cachePastWeek(function() {
+		console.log('cached past week');
+	})
+}, 20 * 60 * 1000);
 //print a message
-console.log('Listening on port 3000');
+console.log('RING Started');

@@ -8,8 +8,6 @@ RING.Artist = Backbone.Model.extend({
 	defaults : {
 		"checked" : false,
 		"name" : "",
-		"search" : [],
-		"handle" : "",
 		"count" : 0,
 		"color" : "#fff",
 		"visible" : false,
@@ -82,7 +80,7 @@ RING.Artists = Backbone.Collection.extend({
 		//this.listenTo("change:checked", this.searchTags);
 	},
 	getArtists : function() {
-		var reqString = window.location + "get?type=artists";
+		var reqString = window.location + "get?type=top";
 		var self = this;
 		$.ajax(reqString, {
 			success : function(response) {
@@ -119,4 +117,8 @@ RING.Artists = Backbone.Collection.extend({
 			}
 		}
 	},
+	//get the color of an artist
+	getColor : function(artist) {
+
+	}
 });
