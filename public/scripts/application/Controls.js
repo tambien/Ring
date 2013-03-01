@@ -11,12 +11,18 @@ RING.Controls = Backbone.Model.extend({
 		//right now
 		"endTime" : new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()),
 		//primary/reblogs/reblogs of reblogs
-		"reblogLevel" : 0,
 		"artistLength" : 0,
 		"expanded" : true,
 		"loading" : 0,
 	},
 	initialize : function(attributes, options) {
+		var blue = new THREE.Color().setRGB(40/255 , 170/255 ,  225/255);
+		var purple = new THREE.Color().setRGB(158/255,  65/255 , 195/255);
+		var yellow = new THREE.Color().setRGB(1, 226 / 255, 31 / 255);
+		var red = new THREE.Color().setRGB(1, 48 / 255, 49 / 255);
+		var green = new THREE.Color().setRGB(151/255, 201/255, 76/255);
+		this.availableColors = [blue, purple, yellow, red, green];
+		this.colorPointer = 0;
 		//get the tag collection
 		this.artistList = new RING.Artists();
 		this.artists = [];
@@ -38,19 +44,39 @@ RING.Controls = Backbone.Model.extend({
 	},
 	updateArtists : function(model, checked) {
 		if(checked) {
-			this.artists.push(model);
-			if(this.artists.length > 4) {
+			if(this.artists.length > 3) {
 				var artist = this.artists.shift();
+				this.availableColors.push(artist.get('color'));
 				artist.set("checked", false);
 			}
+			//remove the old one before adding a new one
+			model.set("color", this.availableColors.shift());
+			this.setCollectionColors(model);
+			this.artists.push(model);
 		} else {
 			//cut out the one that matches
 			var index = this.artists.indexOf(model);
 			if(index > -1) {
-				this.artists.splice(index, 1);
+				var removed = this.artists.splice(index, 1);
+				this.availableColors.push(removed[0].get("color"));
 			}
 		}
 		this.render();
+	},
+	setCollectionColors : function(artist) {
+		//get all of the models that have a particular artist
+		var artistName = artist.get("name");
+		var artistColor = artist.get("color");
+		RING.tumblrCollection.forEach(function(model) {
+			if(model.get("artist") === artistName) {
+				model.set("color", artistColor);
+			}
+		})
+		RING.twitterCollection.forEach(function(tweet) {
+			if(tweet.get("artist") === artistName) {
+				tweet.set("color", artistColor);
+			}
+		})
 	},
 	render : function() {
 		var artists = this.artists;
@@ -85,18 +111,34 @@ RING.Controls = Backbone.Model.extend({
 			model.set("visible", true);
 			//and all it's reblogs
 			model.makeReblogsVisible(reblogLevel);
-			/*
-			//check that the reblog filter is right
-			var reblogMatch = model.get("reblog_level") <= reblogLevel;
+		};
+		var twitterModels = RING.twitterCollection.models
+		for(var i = 0, len = twitterModels.length; i < len; i++) {
+			var model = twitterModels[i];
+			//check if the artist matches
+			var artistMatch = false;
+			for(var j = 0; j < artists.length; j++) {
+				if(model.get("artist") === artists[j].get("name")) {
+					artistMatch = true;
+					break;
+				}
+			}
 			//atempt to speed things up
-			if(!reblogMatch) {
+			if(!artistMatch) {
 				model.set("visible", false);
 				continue;
 			}
-			//if it made it all the way here, it is a match
+			//check that it's the right time range
+			var modelTime = new Date(model.get("timestamp"));
+			var timeMatch = (modelTime > startTime && modelTime <= endTime);
+			//atempt to speed things up
+			if(!timeMatch) {
+				model.set("visible", false);
+				continue;
+			}
 			model.set("visible", true);
-			*/
 		};
+
 	},
 });
 
@@ -140,9 +182,9 @@ RING.DatePicker = Backbone.View.extend({
 		var now = new Date();
 		var startTime = this.model.get("startTime");
 		var endTime = this.model.get("endTime");
-		var min = startTime.getDate() - now.getDate();
-		var max = endTime.getDate() - now.getDate();
-		//values[0] =
+		var dayInMS = 60*1000*60*24;
+		var min = Math.ceil((startTime - now)/dayInMS);
+		var max = Math.ceil((endTime - now)/dayInMS);
 		this.$slider.slider({
 			range : true,
 			min : -6,

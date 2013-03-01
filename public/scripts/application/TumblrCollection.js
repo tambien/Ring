@@ -6,6 +6,7 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		//the force-directed graph
 		this.on("add", this.postAdded);
 		this.on("remove", this.postRemoved);
+		this.primary = [];
 		this.sync();
 	},
 	//connects all reblogs with a line
@@ -36,31 +37,13 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		this.forEach(function(model, index) {
 			if(model.get("reblogged_from") === null) {
 				model.positionReblogs();
+			} else {
+				model.view.drawEdgeToOrigin();	
 			}
-			model.view.drawEdgesToReblogs();
 		});
-		this.primary = this.filter(function(model){
-			return model.get('reblogged_from')===null;
+		this.primary = this.filter(function(model) {
+			return model.get('reblogged_from') === null;
 		})
-		//remove orphans
-		/*
-		 var self = this;
-		 var orphans = this.filter(function(model){
-		 var reblogged_from = model.get("reblogged_from");
-		 return self.get(reblogged_from)===undefined;
-		 })
-		 this.remove(orphans);
-		 */
-		/*
-		 this.forEach(function(model, index) {
-		 model.connectReblogs();
-		 });
-		 this.forEach(function(model, index) {
-		 if(model.get("reblogged_from") === null) {
-		 model.positionReblogs();
-		 }
-		 });
-		 */
 	},
 	sync : function() {
 		//get the tumblr posts from the database
@@ -68,9 +51,9 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		var self = this;
 		$.ajax(reqString, {
 			success : function(response) {
-				console.log("tumblr posts loaded");
 				self.update(response);
 				self.allLoaded();
+				console.log("tumblr posts loaded");
 			},
 			error : function() {
 				console.error("could not fetch that data");

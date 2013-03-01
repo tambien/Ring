@@ -4,65 +4,46 @@
  * each unit represents a post
  */
 
-RING.Tumblr = Backbone.Model.extend({
+RING.Tumblr = RING.Post.extend({
 
-	defaults : {
-		"id" : 0,
-		"blog_name" : "",
-		"photo" : "",
-		"url" : "",
-		"artist" : '',
-		"reblogged_from" : null,
-		"text" : "",
-		"timestamp" : 0,
-		"note_count" : 0,
-		"x" : 0,
-		"y" : 0,
-		"size" : 0,
-		"new" : true,
-		"visible" : false,
-		"reblog_level" : 0,
-	},
 	initialize : function(attributes, options) {
-		this.on("change:visible", this.makeReblogsInvisible);
-		//set hte cid
-		this.cid = this.get("id");
+		this.superInit();
+		this.set("style",  RING.Util.choose(['circle_grad', 'circle']))
 		//an array to store all the reblogs
 		this.reblogs = [];
-		//set the position initially
-		this.setPosition();
-		//set the size and create the view
-		this.getSizeFromNoteCount();
+		//resize if it's a reblog
+		if(this.get("reblogged_from")) {
+			this.set("size", this.get("size") / 2);
+		}
 		//make the view
 		this.view = new RING.Tumblr.View({
 			model : this,
 		});
-	},
-	//called when a model is removed from the collection
-	remove : function() {
-		this.view.remove();
+		//the first point is the center of the circle
+		this.systemNodes = [new THREE.Vector3(this.get("x"), this.get('y'), 0)];
+		//listen for changes and move all of the lines
+		this.on("change:x", this.moveLine);
+		this.on("change:y", this.moveLine);
 	},
 	//called when all of the posts are loaded in the collection
 	allLoaded : function() {
+		this.superLoaded();
+		//listen to the reblogged_from post to set the visibility
+		this.origin = this.collection.get(this.get("reblogged_from"));
 		//connect to the reblogs
 		this.connectReblogs();
 		//get the reblog level
 		this.getReblogLevel();
-		//position the reblogs if it's an origin node
-		//this.view.drawEdgesToReblogs();
+		//listen for changes in visibility
+		if(this.origin) {
+			this.listenTo(this.origin, "change:visible", this.originVisibility);
+		}
 	},
-	//sets the x and y based on the time + a little randomness
-	setPosition : function() {
-		var timestamp = this.get("timestamp");
-		var date = new Date(timestamp);
-		var hoursAngle = Math.PI * 2 * (date.getHours() / 24);
-		var minutesAngle = (Math.PI / 12) * (date.getMinutes() / 60);
-		var timeAngle = hoursAngle + minutesAngle;
-		var randomRadius = RING.Util.randomFloat(350, 420);
-		this.set({
-			x : randomRadius * Math.cos(timeAngle),
-			y : randomRadius * Math.sin(timeAngle),
-		});
+	originVisibility : function(model, visible) {
+		//if the origin isn't visible, neither should this
+		if(!visible) {
+			this.set("visible", false);
+		}
 	},
 	//sets which level of reblog it is
 	//primary/reblog/reblogOfReblog
@@ -73,8 +54,8 @@ RING.Tumblr = Backbone.Model.extend({
 			this.set("reblog_level", 0);
 		} else {
 			//if the origin is not a reblog
-			var origin = this.collection.get(reblogged_from);
-			if(origin && origin.get("reblogged_from") === null) {
+			//this.origin = this.collection.get(reblogged_from);
+			if(this.origin && this.origin.get("reblogged_from") === null) {
 				this.set("reblog_level", 1);
 			} else {
 				this.set("reblog_level", 2);
@@ -82,41 +63,46 @@ RING.Tumblr = Backbone.Model.extend({
 		}
 	},
 	connectReblogs : function() {
-		var reblogged_from = this.get("reblogged_from");
-		if(reblogged_from !== null) {
-			//point the origin blog back to this one
-			var origin = this.collection.get(reblogged_from);
-			if(origin) {
-				origin.reblogs.push(this);
-			}
+		if(this.origin) {
+			this.origin.reblogs.push(this);
 		}
 	},
 	positionReblogs : function() {
-		var x = this.get("x");
-		var y = this.get("y");
-		var r = Math.sqrt(x * x + y * y);
-		var theta = Math.atan2(y, x);
+		this.makeSystemNodes();
+		var x = this.get('x');
+		var y = this.get('y');
+		var theta = this.theta;
 		for(var i = 0, len = this.reblogs.length; i < len; i++) {
 			var reblog = this.reblogs[i];
-			var angle = theta + RING.Util.scale(i, 0, len, -.5, .5);
-			var radius = RING.Util.randomInt(100, 150);
+			var angle = theta + RING.Util.randomFloat(-1, 1);
+			var radius = RING.Util.randomInt(30, 80);
+			reblog.systemNodeIndex = RING.Util.randomInt(0, this.systemNodes.length);
+			//get that position
+			var position = this.systemNodes[reblog.systemNodeIndex];
 			reblog.set({
-				x : radius * Math.cos(angle) + x,
-				y : radius * Math.sin(angle) + y,
+				x : radius * Math.cos(angle) + position.x,
+				y : radius * Math.sin(angle) + position.y,
 			});
 			reblog.positionReblogs();
 		}
 	},
-	getSizeFromNoteCount : function() {
-		var count = this.get("note_count");
-		var size = 0;
-		if(!this.get("reblogged_from")) {
-			size = Math.log(count) * 4 + 8;
-		} else {
-			size = Math.log(count) + 12;
-		}
-		this.set("size", size);
+	moveLine : function(){
+		var x = this.get("x");
+		var y = this.get("y");
+		this.systemNodes[0].x = x;
+		this.systemNodes[0].y = y;
 	},
+	/*
+	 positionReblogs : function() {
+	 //make the system nodes for the l-system-type structure
+
+	 for(var i = 0, len = this.reblogs.length; i < len; i++) {
+	 var reblog = this.reblogs[i];
+	 reblog.positionFromSystemNode();
+	 //reblog.positionReblogs();
+	 }
+	 },
+	 */
 	makeReblogsVisible : function(level) {
 		_.forEach(this.reblogs, function(reblog, index) {
 			if(reblog.get('reblog_level') <= level) {
@@ -134,119 +120,127 @@ RING.Tumblr = Backbone.Model.extend({
 				reblog.makeReblogsInvisible(reblog, visible);
 			});
 		}
+	},
+	makeSystemNodes : function() {
+		//add a randomized amount of additional points < the number of reblogs
+		var reblogCount = this.reblogs.length;
+		var minLines = Math.floor(reblogCount * .25);
+		var maxLines = Math.ceil(reblogCount * .75);
+		maxLines = Math.min(maxLines, 10);
+		//find the position's angle
+		var x = this.get("x");
+		var y = this.get('y');
+		var angle = this.theta
+		var nodeCount = RING.Util.randomInt(maxLines, minLines);
+		for(var i = 0; i < nodeCount; i++) {
+			//make a random point that reaches a little further than the last in roughly the same direction
+			var randomAngle = angle + RING.Util.randomFloat(-.5, .5);
+			var randomRadius = RING.Util.randomInt(50, 80);
+			var newX = randomRadius * Math.cos(randomAngle) + x;
+			var newY = randomRadius * Math.sin(randomAngle) + y;
+			//push that position on
+			var vect = new THREE.Vector3(newX, newY, 0);
+			this.systemNodes.push(vect);
+			x = newX;
+			y = newY;
+		}
+	},
+	positionFromSystemNode : function() {
+		if(this.origin) {
+			//pick a random system node index
+			this.systemNodeIndex = RING.Util.randomInt(0, this.origin.systemNodes.length);
+			//get that position
+			//var position = this.origin.systemNodes[this.systemNodeIndex];
+			var position = this.origin.view.lineCenter;
+			//angle it outward from the origin
+			var angle = this.origin.theta;
+			//position the node some random angle from this one
+
+		}
 	}
 });
 
-var PI2 = 2 * Math.PI;
-var material = new THREE.ParticleCanvasMaterial({
+//cache the line material
+RING.Tumblr.lineMaterial = new THREE.LineBasicMaterial({
 	color : 0xfffffff,
-	program : function(context) {
-		//var size = this.model.get("size")/2;
-		context.beginPath();
-		context.arc(0, 0, 1, 0, PI2, false);
-		context.closePath();
-		context.fill();
-	}
+	opacity : 0.5,
+	linewidth : .5,
+	transparent : true
 })
 
-RING.Tumblr.View = Backbone.View.extend({
-
-	className : "tumblrPost",
-
-	events : {
-		//"click #canvas" : "clicked",
-	},
+RING.Tumblr.View = RING.Post.View.extend({
 
 	initialize : function() {
-		//trigger callbacks on repositioning
-		this.listenTo(this.model, "change:x", this.position);
-		this.listenTo(this.model, "change:y", this.position);
-		this.listenTo(this.model, "change:visible", this.setVisible);
-		//make the THREE.js object
-		this.object = new THREE.Particle(material);
-		//this.object.position.z = RING.Util.randomFloat(-.5, .5);
-		//this.object.position.z = this.model.get("size")*10;
-		this.object.scale.x = this.object.scale.y = this.model.get("size");
-		//the center is the vector which floats above the circle's center
-		this.lineCenter = this.object.position.clone().setZ(1);
-		this.position();
-		//attach the callback when it's been clicked on
-		this.object.onclick = this.clicked.bind(this);
-		//not visible by default
-		//this.object.visible = false;
+		this.superInit();
+		this.listenTo(this.model, "change:x", this.moveLine);
+		this.listenTo(this.model, "change:y", this.moveLine);
+		this.listenTo(this.model, "change:visible", this.lineVisible);
+		this.lineCenter = new THREE.Vector3(this.model.get("x"), this.model.get("y"), 0);
 	},
-	setColor : function(color) {
+	moveLine : function(model, x) {
+		//find the difference of previous position
 
-	},
-	createElement : function() {
+		//apply that difference to every node in the systemNodes
 
-	},
-	position : function() {
-		var x = this.model.get("x");
-		var y = this.model.get("y");
-		this.object.position.x = x;
-		this.object.position.y = y;
-		this.lineCenter.x = x;
+		//and reangle it accordingly! that's kind of expensive!
+		var x = model.get("x");
+		var y = model.get("y");
+		this.lineCenter.x = x
 		this.lineCenter.y = y;
 	},
-	draw : function(context) {
-		//var size = this.model.get("size")/2;
-		context.beginPath();
-		context.arc(0, 0, 1, 0, PI2, false);
-		context.closePath();
-		context.fill();
-	},
-	makeTexture : function() {
-		var size = this.model.get("size");
-		var cache = document.createElement('canvas');
-		cache.width = size;
-		cache.height = size;
-		var ctx = cache.getContext('2d');
-		this.draw(ctx);
-		var texture = new THREE.Texture(cache);
-		texture.needsUpdate = true;
-	},
-	//draw edges to the connected reposts
-	drawEdgesToReblogs : function() {
-		//if there are already lines, don't draw some more
-		if(!this.line) {
-			var reblogID = this.model.get("reblogged_from");
-			var reblog = RING.tumblrCollection.get(reblogID);
-			if(reblog) {
-				var geometry = new THREE.Geometry();
-				geometry.vertices.push(this.lineCenter);
-				geometry.vertices.push(reblog.view.lineCenter);
-				this.line = new THREE.Line(geometry, new THREE.LineBasicMaterial({
-					color : 0xffffff,
-					opacity : .5,
-					linewidth : 1.5,
-				}));
-			}
-		}
-	},
-	clicked : function() {
-		console.log(this.model);
-	},
-	remove : function() {
-		//remove all of the objects that were added to the scene
-		RING.scene.remove(this.object);
+	lineVisible : function(model, visible) {
 		if(this.line) {
-			RING.scene.remove(this.line);
-		}
-	},
-	setVisible : function(model, visible) {
-		if(visible) {
-			//add it to the scene
-			RING.scene.add(this.object);
-			if(this.line) {
+			if(visible) {
 				RING.scene.add(this.line);
-			}
-		} else {
-			RING.scene.remove(this.object);
-			if(this.line) {
+			} else {
 				RING.scene.remove(this.line);
 			}
 		}
-
-	}
+	},
+	createElement : function() {
+		this.$title = $("<div id='title'>" + this.model.get("blog_name") + "</div>").appendTo(this.$el);
+		var text = this.model.get("text");
+		if(text.length > 500) {
+			text = text.slice(0, 497);
+			text += "...";
+		}
+		this.$text = $("<div id='text'>" + text + "</div>").appendTo(this.$el);
+		var photo = this.model.get("photo");
+		if(photo !== "") {
+			var self = this;
+			this.$photo = $("<img />").attr('src', photo).load(function() {
+				if(!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
+					alert('broken image!');
+				} else {
+					self.$el.append(self.$photo);
+				}
+			});
+		}
+		this.$notes = $("<div id='reblogs'>notes: " + this.model.get("note_count") + "</div>").appendTo(this.$el);
+	},
+	//draw edges to the connected reposts
+	drawEdgeToOrigin : function() {
+		//if there are already lines, don't draw some more
+		if(!this.line) {
+			/*
+			var geometry = new THREE.Geometry();
+				//geometry.vertices.push(this.model.systemNodes[0]);
+				//geometry.vertices.push(origin.systemNodes[0]);
+				for(var i = 0; i < this.model.systemNodes.length; i++) {
+					geometry.vertices.push(this.model.systemNodes[i]);
+				}
+				this.line = new THREE.Line(geometry, RING.Tumblr.lineMaterial);
+				*/
+			var origin = this.model.origin;
+			if(origin) {
+				var geometry = new THREE.Geometry();
+				geometry.vertices.push(this.model.systemNodes[0]);
+				//geometry.vertices.push(origin.systemNodes[0]);
+				for(var i = this.model.systemNodeIndex; i >= 0; i--) {
+					geometry.vertices.push(origin.systemNodes[i]);
+				}
+				this.line = new THREE.Line(geometry, RING.Tumblr.lineMaterial);
+			}
+		}
+	},
 })

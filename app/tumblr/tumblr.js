@@ -103,45 +103,44 @@ var async = require("async");
 	 */
 
 	function updatePost(post, memo, callback) {
-		//check if the post needs an update
-		//if it's older than 2 months, it does not need to be updated
-		var postTime = new Date(post.timestamp * 1000);
-		var now = new Date();
-		var lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
-		if(postTime > lastMonth) {
-			db.needsUpdate(post, function(update) {
-				if(update) {
-					getFromTumblr(post, memo, callback);
-				} else {
-					callback(null);
-				}
-			})
-		} else {
-			callback(null);
-		}
+		db.needsUpdate(post, function(update) {
+			if(update) {
+				getFromTumblr(post, memo, callback);
+			} else {
+				callback(null);
+			}
+		});
 	}
 
 	//gets a post from tumblr and puts it in the db
 	function getFromTumblr(post, memo, topLevelCallback) {
 		fetch.get(post, function(retPost) {
-			//now put hte post in our DB
 			memo.tumblrGet++;
-			//make sure the artist gets added to the db
-			async.parallel([
-			function(putDBCallback) {
-				db.put(retPost, memo, function() {
-					putDBCallback(null);
-				});
-			},
+			//if it's older than 1 month, it does not need to be updated
+			var postTime = new Date(retPost.timestamp * 1000);
+			var now = new Date();
+			var lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+			//now put hte post in our DB
+			if(postTime > lastMonth) {
+				//make sure the artist gets added to the db
+				async.parallel([
+				function(putDBCallback) {
+					db.put(retPost, memo, function() {
+						putDBCallback(null);
+					});
+				},
 
-			function(updateReblogsCallback) {
-				//console.log('post added: %d %s', retPost.id, retPost.blog_name);
-				updateReblogs(retPost, memo, updateReblogsCallback);
-			}], function(err) {
-				if(!err) {
-					topLevelCallback(null);
-				}
-			});
+				function(updateReblogsCallback) {
+					//console.log('post added: %d %s', retPost.id, retPost.blog_name);
+					updateReblogs(retPost, memo, updateReblogsCallback);
+				}], function(err) {
+					if(!err) {
+						topLevelCallback(null);
+					}
+				});
+			} else {
+				topLevelCallback(null);
+			}
 		});
 	}
 

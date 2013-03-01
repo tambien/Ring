@@ -6,6 +6,7 @@ RING.TwitterCollection = Backbone.Collection.extend({
 		//the force-directed graph
 		this.on("add", this.postAdded);
 		this.on("remove", this.postRemoved);
+		this.sync();
 	},
 	postAdded : function(model) {
 		//model.allLoaded();
@@ -21,5 +22,20 @@ RING.TwitterCollection = Backbone.Collection.extend({
 		this.forEach(function(model, index) {
 			model.allLoaded();
 		});
+	},
+	sync : function() {
+		//get the twitter posts from the database
+		var reqString = window.location + "get?type=twitter";
+		var self = this;
+		$.ajax(reqString, {
+			success : function(response) {
+				self.update(response);
+				self.allLoaded();
+				console.log("twitter tweets loaded");
+			},
+			error : function() {
+				console.error("could not fetch that data");
+			}
+		})
 	}
 });

@@ -37,7 +37,7 @@ var http = require('http');
 			for(var i = 0; i < response.notes.length; i++) {
 				var note = response.notes[i];
 				if(note.type === "reblog") {
-					//if the reblog notice is not this post
+					//if the reblog is not this post
 					if(note.post_id != response.id) {
 						var reb = {
 							id : note.post_id,
@@ -120,7 +120,7 @@ var http = require('http');
 		var options = {
 			host : 'api.tumblr.com',
 			port : 80,
-			path : '/v2/blog/' + blog_name + ".tumblr.com/posts?api_key=" + keys.tumblrAPIKey + "&id=" + id + "&notes_info=false&reblog_info=true&filter=text",
+			path : '/v2/blog/' + blog_name + ".tumblr.com/posts?api_key=" + keys.tumblrAPIKey + "&id=" + id + "&notes_info=true&reblog_info=true&filter=text",
 			method : 'GET',
 		};
 		makeRequest(options, function(response) {

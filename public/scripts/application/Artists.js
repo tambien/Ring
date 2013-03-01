@@ -9,7 +9,8 @@ RING.Artist = Backbone.Model.extend({
 		"checked" : false,
 		"name" : "",
 		"count" : 0,
-		"color" : "#fff",
+		"handle" : '',
+		"color" : [255, 255, 255],
 		"visible" : false,
 	},
 	initialize : function(attributes, options) {
@@ -43,8 +44,9 @@ RING.Artist.View = Backbone.View.extend({
 	},
 	render : function(model) {
 		if(this.model.get("checked")) {
+			var color = this.model.get("color")
 			this.$checkbox.css({
-				"background-color" : this.model.get("color")
+				"background-color" : "rgb(" + color.r * 255 + "," + color.g * 255 + "," + color.b * 255 + ")"
 			})
 		} else {
 			this.$checkbox.css({
@@ -120,5 +122,11 @@ RING.Artists = Backbone.Collection.extend({
 	//get the color of an artist
 	getColor : function(artist) {
 
+	},
+	//returns the handle for an artist name
+	getHandle : function(artist) {
+		var item = this.where({
+			name : artist,
+		})
 	}
 });

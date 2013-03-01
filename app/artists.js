@@ -77,6 +77,7 @@ var twitter = require('./twitter/twitter-db');
 		makeRequest(options, function(response) {
 			var tmpArtists = [];
 			for(var i = 0; i < response.length; i++) {
+			//for(var i = 0; i < 200; i++) {
 				var item = response[i];
 				var artistName = item["gsx$artist"]["$t"];
 				var handle = item["gsx$twitter"]["$t"].toLowerCase();

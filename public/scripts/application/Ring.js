@@ -10,6 +10,8 @@ $(function() {
 var RING = function() {
 
 	var $container;
+	
+	var rtree = new RTree(10);
 
 	//INITIALIZATION///////////////////////////////////////////////////////////
 
@@ -20,26 +22,32 @@ var RING = function() {
 		setupStats();
 		//bind the basic events
 		bindEvents();
+		//make the controls
+		RING.controls = new RING.Controls();
 		//make the tumblr collection
 		RING.tumblrCollection = new RING.TumblrCollection();
 		RING.twitterCollection = new RING.TwitterCollection();
-		//make the controls
-		RING.controls = new RING.Controls();
-		//start the drawing
+		RING.Particles.initialize();
+		//start it off
 		render();
 	}
 
 	//THREE////////////////////////////////////////////////////////////////////
 
-	var camera, projector, renderer;
+	var projector, renderer;
 
 	function setupTHREE() {
-		camera = new THREE.PerspectiveCamera(70, 4 / 3, 1, 10000);
-		camera.position.set(0, 0, 1000);
+		RING.camera = new THREE.PerspectiveCamera(70, 4 / 3, 1, 10000);
+		RING.camera.position.set(0, 0, 1000);
 		RING.scene = new THREE.Scene();
 		projector = new THREE.Projector();
 		//the renderer
-		RING.renderer = new THREE.CanvasRenderer();
+		RING.renderer = new THREE.WebGLRenderer({
+			antialias : true,
+			clearColor : 0x000000,
+			clearAlpha : 1
+		});
+		RING.renderer.sortObjects = false;
 		$container.append(RING.renderer.domElement);
 		//initialize the size
 		sizeTHREE();
@@ -48,8 +56,8 @@ var RING = function() {
 	function sizeTHREE() {
 		RING.width = $container.width();
 		RING.height = $container.height();
-		camera.aspect = RING.width / RING.height;
-		camera.updateProjectionMatrix();
+		RING.camera.aspect = RING.width / RING.height;
+		RING.camera.updateProjectionMatrix();
 		RING.renderer.setSize(RING.width, RING.height);
 	}
 
@@ -64,25 +72,28 @@ var RING = function() {
 			$container.append(stats.domElement);
 		}
 	}
-	
+
 	//EVENTS/////////////////////////////////////////////////////////////////////
-	
-	function bindEvents(){
+
+	function bindEvents() {
 		$(window).resize(sizeTHREE);
 		$container.click(mouseClicked);
 	}
-	
-	function mouseClicked(event){
-		event.preventDefault();
-		var vector = new THREE.Vector3((event.offsetX / RING.width ) * 2 - 1, -(event.offsetY /RING.height ) * 2 + 1, 0.5);
-		projector.unprojectVector(vector, camera);
 
-		var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
-		
+	function mouseClicked(event) {
+		//remove any other post displays
+		$(".post").remove();
+		//find a new post to display
+		event.preventDefault();
+		var vector = new THREE.Vector3((event.offsetX / RING.width ) * 2 - 1, -(event.offsetY / RING.height ) * 2 + 1, 0.5);
+		projector.unprojectVector(vector, RING.camera);
+
+		var raycaster = new THREE.Raycaster(RING.camera.position, vector.sub(RING.camera.position).normalize());
+
 		var intersects = raycaster.intersectObjects(RING.scene.children);
 		if(intersects.length > 0) {
 			var intersected = intersects[0].object;
-			if (intersected.onclick){
+			if(intersected.onclick) {
 				intersected.onclick();
 			}
 		}
@@ -90,12 +101,16 @@ var RING = function() {
 
 	//DRAW LOOP//////////////////////////////////////////////////////////////////
 
+	function start() {
+
+	}
+
 	function render() {
 		requestAnimationFrame(render);
 		if(RING.dev) {
 			stats.update();
 		}
-		RING.renderer.render(RING.scene, camera);
+		RING.renderer.render(RING.scene, RING.camera);
 		//update tumblr collection
 		//RING.tumblrCollection.render();
 	}
@@ -104,6 +119,8 @@ var RING = function() {
 
 	return {
 		initialize : initialize,
+		start : start,
+		rtree : rtree,
 	};
 
 }();

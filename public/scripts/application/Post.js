@@ -6,28 +6,38 @@
 
 RING.Post = Backbone.Model.extend({
 
+	defaults : {
+		//shared post attributes
+		"id" : 0,
+		"artist" : '',
+		"text" : "",
+		"timestamp" : 0,
+		"note_count" : 0,
+		//position and size
+		"x" : 0,
+		"y" : 0,
+		"nowX" : -1000,
+		"nowY" : -1000,
+		"size" : 0,
+		//displaying
+		"visible" : false,
+		//ParticleSystemStuff
+		"particleIndex" : 0,
+		"style" : 'circle',
+		"color" : new THREE.Color(0xffffff),
+	},
+
 	superInit : function(attributes, options) {
-		//setup the changes
-		this.on("change:timestamp", this.getPositionFromTime);
-		this.on("change:note_count", this.getSizeFromNoteCount);
+		this.on("change:x", this.moved);
+		this.on("change:y", this.moved);
 		//calculate the position
 		this.getSizeFromNoteCount();
-		this.getPositionFromTime();
 		//the cid
 		this.cid = this.get("id");
 	},
 	//called when all of the posts are loaded in the collection
-	allLoaded : function() {
-		if(this.get("x") === 0 && this.get("y") === 0) {
-			this.getSizeFromNoteCount();
-			this.getPositionFromTime();
-		}
-	},
-	validate : function(attributes, options) {
-		//don't update the model to an out of date model
-		if(attributes.timestamp < this.previous("timestamp")) {
-			return false;
-		}
+	superLoaded : function() {
+		this.getPositionFromTime();
 	},
 	//called when a model is removed from the collection
 	remove : function() {
@@ -40,7 +50,7 @@ RING.Post = Backbone.Model.extend({
 		var hoursAngle = Math.PI * 2 * (date.getHours() / 24);
 		var minutesAngle = (Math.PI / 12) * (date.getMinutes() / 60);
 		var timeAngle = hoursAngle + minutesAngle;
-		var randomRadius = RING.Util.randomFloat(380, 400);
+		var randomRadius = RING.Util.randomFloat(350, 420);
 		this.set({
 			x : randomRadius * Math.cos(timeAngle),
 			y : randomRadius * Math.sin(timeAngle),
@@ -52,56 +62,66 @@ RING.Post = Backbone.Model.extend({
 		size = Math.log(count) * 4 + 8;
 		this.set("size", size);
 	},
+	moved : function(){
+		//it woul be cool to do a tween here
+		var x = this.get("x");
+		var y = this.get("y");
+		//set the bounding box for touches
+		RING.rtree
+		
+		//set the theta
+		this.setTheta(x, y);
+	},
+	setTheta : function(x, y){
+		this.theta = Math.atan2(y, x);
+	}
 });
-
-var PI2 = 2 * Math.PI;
 
 RING.Post.View = Backbone.View.extend({
 
 	className : "post",
 
-	events : {
-		//"click #canvas" : "clicked",
-	},
-
 	superInit : function() {
 		//trigger callbacks on repositioning
 		this.listenTo(this.model, "change:x", this.position);
 		this.listenTo(this.model, "change:y", this.position);
-		//make the THREE.js object
-		this.object = new THREE.Particle(new THREE.ParticleCanvasMaterial({
-			color : Math.random() * 0x808080 + 0x808080,
-			program : this.draw.bind(this),
-		}));
-		this.object.position.z = RING.Util.randomFloat(-.5, .5);
-		this.object.scale.x = this.object.scale.y = this.model.get("size");
-		//set the posiiton
-		this.position();
-		//attach the callback when it's been clicked on
-		this.object.onclick = this.clicked.bind(this);
-		//add it to the scene
-		RING.scene.add(this.object);
+		this.listenTo(this.model, "change:color", this.setColor);
+		this.listenTo(this.model, "change:size", this.setSize);
+		this.listenTo(this.model, "change:visible", this.setVisible);
+		//get the particle from the particle system
+		this.particle = RING.Particles.get(this.model);
+		RING.Particles.updateSize(this.model);
+		//set the posiiton initially
+		//this.position();
 	},
 	createElement : function() {
 
 	},
-	position : function() {
-		var x = this.model.get("x");
-		var y = this.model.get("y");
-		this.object.position.x = x;
-		this.object.position.y = y;
+	position : function(model) {
+		if(model.get('visible')) {
+			RING.Particles.updatePosition(model);
+		}
 	},
-	draw : function(context) {
-		context.beginPath();
-		context.arc(0, 0, 1, 0, PI2, false);
-		context.closePath();
-		context.fill();
+	setSize : function(model, size) {
+		RING.Particles.updateSize(model);
+	},
+	setColor : function(model) {
+		RING.Particles.updateColor(model);
 	},
 	clicked : function() {
-		console.log(this.model);
+		//console.log(this.model);
+		//load the photo only when it's clicked on
 	},
 	remove : function() {
 		//remove all of the objects that were added to the scene
 		RING.scene.remove(this.object);
+	},
+	setVisible : function(model, visible) {
+		//just move it off the screen to make it invisible
+		if(visible) {
+			this.position(model);
+		} else {
+			RING.Particles.position(model, -1000, -1000);
+		}
 	}
 })

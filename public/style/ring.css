@@ -43,7 +43,7 @@ body {
  * CONTROLS
  */
 #controls {
-	width: 500px;
+	width: 400px;
 	height: 600px;
 	margin: 0px;
 	padding: 0px;
@@ -177,4 +177,56 @@ body {
 	color: white;
 	font-family: sans-serif;
 	font-size: 16px;
+}
+
+/*
+ * POST
+ */
+.post {
+	position: absolute;
+	width: 250px;
+	height: 250px;
+	border: solid 1px white;
+	background-color: black;
+	z-index: 10000;
+}
+
+.post #title{
+	position: absolute;
+	color: white;
+	font-family: sans-serif;
+	font-size: 12px;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	text-align: center;
+}
+
+.post #text{
+	position: absolute;
+	color: white;
+	font-family: sans-serif;
+	font-size: 12px;
+	left: 0px;
+	bottom: 20px;
+	width: 100%;
+	text-align: center;
+}
+
+.post #photo{
+	position: absolute;
+	left: 10px;
+	top: 15px;
+	width: 220px;
+}
+
+.post #notes{
+	position: absolute;
+	color: white;
+	font-family: sans-serif;
+	font-size: 12px;
+	left: 0px;
+	bottom: 0px;
+	width: 100%;
+	text-align: center;
 }
