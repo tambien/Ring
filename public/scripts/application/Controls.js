@@ -43,13 +43,11 @@ RING.Controls = Backbone.Model.extend({
 		this.reblogLevel = new RING.ReblogLevel({
 			model : this,
 		});
-		this.search = new RING.Search({
-			model : this,
-		});
-		//make the emuze link
-		$("#visitEmuze").click(function() {
-			window.open("http://www.emuze.com", '_blank');
-		});
+		if(!RING.installation) {
+			this.search = new RING.Search({
+				model : this,
+			});
+		}
 	},
 	updateArtists : function(model, checked) {
 		if(checked) {
@@ -187,6 +185,13 @@ RING.Controls.View = Backbone.View.extend({
 		this.listenTo(this.model, "change", this.render);
 		this.listenTo(this.model, "change:expanded", this.expand);
 		this.render(this.model);
+		//make the emuze link for web version only
+		if(!RING.installation) {
+			this.$visitEmuze = $("<div id='visitEmuze'><span class='titleText'>VISIT EMUZE</span></div>").insertAfter($("#controls"));
+			this.$visitEmuze.click(function() {
+				window.open("http://www.emuze.com", '_blank');
+			});
+		}
 	},
 	render : function(model) {
 		if(this.model.get("loading") > 0) {
@@ -234,8 +239,23 @@ RING.Controls.View = Backbone.View.extend({
 				width : "5px"
 			})
 			//shrink the emuze visit button
-			$("#visitEmuze").hide(time / 2, function() {
-				self.$el.transition({
+			if(!RING.installation) {
+				$("#visitEmuze").hide(time / 2, function() {
+					self.$el.transition({
+						height : height
+					}, time, function() {
+						$(this).transition({
+							width : width,
+						}, time, function() {
+							//rerender when opened
+							self.render();
+							self.model.datePicker.render();
+							self.model.reblogLevel.render();
+						});
+					});
+				});
+			} else {
+				this.$el.transition({
 					height : height
 				}, time, function() {
 					$(this).transition({
@@ -247,7 +267,7 @@ RING.Controls.View = Backbone.View.extend({
 						self.model.reblogLevel.render();
 					});
 				});
-			});
+			}
 			this.$revealButton.find("span").html("HIDE OPTIONS");
 		} else {
 			//first shrink the in x direction then y
@@ -258,7 +278,9 @@ RING.Controls.View = Backbone.View.extend({
 					height : "0px"
 				}, time, function() {
 					//reopen the emuze visit button
-					$("#visitEmuze").show(time / 2)
+					if(!RING.installation) {
+						$("#visitEmuze").show(time / 2)
+					}
 				});
 			});
 			this.$revealButton.find("span").html("SHOW OPTIONS")
@@ -469,10 +491,11 @@ RING.Search = Backbone.View.extend({
 		var found = this.model.artistList.where({
 			name : artistName,
 		});
-		if(found.length>0) {
+		if(found.length > 0) {
 			found[0].set("checked", true);
 		} else {
 			//search the artist for the past week
+			artistName = encodeURIComponent(artistName);
 			var reqString = window.location + "get?type=week&artist=" + artistName;
 			var self = this;
 			$.ajax(reqString, {
