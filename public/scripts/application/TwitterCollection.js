@@ -27,6 +27,8 @@ RING.TwitterCollection = Backbone.Collection.extend({
 		//get the twitter posts from the database
 		var reqString = window.location + "get?type=twitter";
 		var self = this;
+		RING.loaded();
+		/*
 		$.ajax(reqString, {
 			success : function(response) {
 				self.update(response);
@@ -39,5 +41,6 @@ RING.TwitterCollection = Backbone.Collection.extend({
 				console.error("could not fetch that data");
 			}
 		})
+		*/
 	}
 });

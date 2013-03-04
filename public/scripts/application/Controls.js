@@ -43,7 +43,10 @@ RING.Controls = Backbone.Model.extend({
 		this.reblogLevel = new RING.ReblogLevel({
 			model : this,
 		});
-		//load all of the models
+		//make the emuze link
+		$("#visitEmuze").click(function(){
+			window.open("http://www.emuze.com",'_blank');
+		});
 	},
 	updateArtists : function(model, checked) {
 		if(checked) {
@@ -212,13 +215,15 @@ RING.Controls.View = Backbone.View.extend({
 			}, time, function() {
 				$(this).transition({
 					width : width,
-				}, time, function(){
+				}, time, function() {
 					//rerender when opened
 					self.render();
 					self.model.datePicker.render();
 					self.model.reblogLevel.render();
 				});
 			});
+			//shrink the emuze visit button
+			$("#visitEmuze").hide(time / 2);
 			this.$revealButton.find("span").html("HIDE OPTIONS");
 		} else {
 			//first shrink the in x direction then y
@@ -228,7 +233,9 @@ RING.Controls.View = Backbone.View.extend({
 				$(this).transition({
 					height : "0px"
 				}, time);
-			})
+			});
+			//reopen the emuze visit button
+			$("#visitEmuze").show(time / 2);
 			this.$revealButton.find("span").html("SHOW OPTIONS")
 		}
 	},
@@ -314,9 +321,9 @@ RING.DatePicker = Backbone.View.extend({
 		for(var i = 0; i < this.$dates.length; i++) {
 			var dot = this.$dates[i];
 			var date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (i - 6));
-			var monthNum = date.getMonth()+1;
+			var monthNum = date.getMonth() + 1;
 			var day = date.getDate();
-			dot.html(monthNum+"/"+day);
+			dot.html(monthNum + "/" + day);
 		}
 	},
 	changeDate : function(event, ui) {
