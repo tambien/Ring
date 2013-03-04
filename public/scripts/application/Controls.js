@@ -438,7 +438,7 @@ RING.Search = Backbone.View.extend({
 	},
 
 	initialize : function() {
-		this.$title = $("<div id='title' class='titleText'>SEARCH FOR A TAG</div>").appendTo(this.$el);
+		this.$title = $("<div id='title' class='titleText'>SEARCH FOR AN ARTIST</div>").appendTo(this.$el);
 		this.$search = $("<input class='titleText' id='search'/>").appendTo(this.$el);
 		this.$button = $("<div class='titleText' id='button'>SEARCH</div>").appendTo(this.$el);
 		this.$el.insertAfter($("#tags"));
