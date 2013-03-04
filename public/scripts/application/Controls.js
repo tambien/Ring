@@ -585,27 +585,19 @@ RING.Search = Backbone.View.extend({
 			$.ajax(reqString, {
 				success : function(response) {
 					console.log('got artist');
-					if(response.artist !== null) {
-						//update the tumblr and twitter collections with the results
-						RING.tumblrCollection.add(response.tumblr, {
-							merge : false,
-						});
-						RING.twitterCollection.add(response.twitter, {
-							merge : false,
-						});
-						//gotta do all that loading bullshit
-						//need to do this just on the new artists
-						RING.tumblrCollection.loadArtist(artistName);
-						RING.twitterCollection.loadArtist(artistName);
+					var post = response.posts[0];
+					if(post.artist !== null) {
+						RING.tumblrCollection.addArtist(post);
+						RING.twitterCollection.addArtist(post);
+						//add the artist to the list also
 						//make an artist
-						var artist = new RING.Artist(response.artist);
+						var artist = new RING.Artist(post.artist);
 						//add that artist to the collection
 						self.model.artistList.add(artist, {
 							merge : false,
 						});
-						callback();
 						//check that artist
-						//artist.set("checked", true);
+						artist.set("checked", true);
 					}
 				},
 				error : function() {
