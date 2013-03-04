@@ -86,6 +86,8 @@ var artists = require('./artists');
 			getArtistPastWeek(artist.name, tmpCache, callback);
 		}, function() {
 			tmpCache.lastUpdate = new Date();
+			//remove the orphans from the tumblr list
+			tmpCache.tumblr = removeOrphans(tmpCache.tumblr);
 			cache = tmpCache;
 			//empty the tmp cache
 			tmpCache = {
@@ -119,9 +121,29 @@ var artists = require('./artists');
 	}
 	
 	//TODO: remove all of the nodes whose origin node is not in the set
-	function removeOrphans(tumblrList, callback){
-		//var list = 
-		//for 
+	function removeOrphans(tumblrList){
+		var ids = [];
+		//make a list of the ids
+		for (var i = 0; i < tumblrList.length; i++){
+			ids.push(tumblrList[i].id);
+		}
+		//go through and add reblogs whose origin is in the list
+		var ret = [];
+		for (var i = 0; i < tumblrList.length; i++){
+			var post = tumblrList[i];
+			if (post.reblogged_from !== null){
+				//if it's parent is in the list
+				var index = ids.indexOf(post.reblogged_from);
+				if (index >=0){
+					ret.push(post);
+				}
+			} else {
+				ret.push(post);
+			}
+		} 
+		var diff = ids.length - ret.length;
+		console.log("cut %d from %d", diff, ids.length);
+		return ret;
 	}
 
 	/*

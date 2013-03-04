@@ -50,7 +50,7 @@ RING.Controls = Backbone.Model.extend({
 	},
 	updateArtists : function(model, checked) {
 		if(checked) {
-			if(this.artists.length > 3) {
+			if(this.artists.length > 4) {
 				var artist = this.artists.shift();
 				this.availableColors.push(artist.get('color'));
 				artist.set("checked", false);
@@ -213,20 +213,21 @@ RING.Controls.View = Backbone.View.extend({
 			this.$el.css({
 				width : "5px"
 			})
-			this.$el.transition({
-				height : height
-			}, time, function() {
-				$(this).transition({
-					width : width,
+			//shrink the emuze visit button
+			$("#visitEmuze").hide(time / 2, function() {
+				self.$el.transition({
+					height : height
 				}, time, function() {
-					//rerender when opened
-					self.render();
-					self.model.datePicker.render();
-					self.model.reblogLevel.render();
+					$(this).transition({
+						width : width,
+					}, time, function() {
+						//rerender when opened
+						self.render();
+						self.model.datePicker.render();
+						self.model.reblogLevel.render();
+					});
 				});
 			});
-			//shrink the emuze visit button
-			$("#visitEmuze").hide(time / 2);
 			this.$revealButton.find("span").html("HIDE OPTIONS");
 		} else {
 			//first shrink the in x direction then y
