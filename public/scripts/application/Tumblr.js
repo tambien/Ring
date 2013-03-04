@@ -24,6 +24,7 @@ RING.Tumblr = RING.Post.extend({
 		//listen for changes and move all of the lines
 		this.on("change:x", this.moveLine);
 		this.on("change:y", this.moveLine);
+		//this.listenTo(RING.controls, "change:reblogLevel", this.changeReblogLevel);
 	},
 	//called when all of the posts are loaded in the collection
 	allLoaded : function() {
@@ -43,6 +44,22 @@ RING.Tumblr = RING.Post.extend({
 		//if the origin isn't visible, neither should this
 		if(!visible) {
 			this.set("visible", false);
+		} else {
+			//if (RING.controls.get("reblogLevel") >= this.get('reblog_level')){
+
+			//}
+		}
+	},
+	changeReblogLevel : function(model, reblogLevel) {
+		var origin = this.origin;
+		if(origin) {
+			if(origin.get("visible")) {
+				if(reblogLevel >= this.get("reblog_level")) {
+					this.set("visible", true);
+				} else {
+					this.set("visible", false);
+				}
+			}
 		}
 	},
 	//sets which level of reblog it is

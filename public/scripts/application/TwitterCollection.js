@@ -6,7 +6,6 @@ RING.TwitterCollection = Backbone.Collection.extend({
 		//the force-directed graph
 		this.on("add", this.postAdded);
 		this.on("remove", this.postRemoved);
-		this.sync();
 	},
 	postAdded : function(model) {
 		//model.allLoaded();
@@ -23,18 +22,18 @@ RING.TwitterCollection = Backbone.Collection.extend({
 			model.allLoaded();
 		});
 	},
-	sync : function() {
+	sync : function(callback) {
 		//get the twitter posts from the database
 		var reqString = window.location + "get?type=twitter";
 		var self = this;
 		if(RING.dontLoad) {
-			RING.loaded();
+			callback();
 		} else {
 			$.ajax(reqString, {
 				success : function(response) {
 					self.update(response);
-					self.allLoaded();
-					RING.loaded();
+					//self.allLoaded();
+					callback();
 					console.log("twitter tweets loaded");
 				},
 				error : function() {
@@ -44,6 +43,18 @@ RING.TwitterCollection = Backbone.Collection.extend({
 			})
 		}
 	}, 
+	addArtist : function(posts) {
+		var artistName = posts.artist.name;
+		this.add(posts.twitter, {
+			merge : false
+		});
+		var artistPosts = this.where({
+			artist : artistName
+		});
+		_.forEach(artistPosts, function(model) {
+			model.allLoaded();
+		});
+	},
 	//connects all of the reblogs, etc
 	loadArtist : function(artist) {
 		var artistPosts = this.where({

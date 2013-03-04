@@ -76,7 +76,7 @@ RING.Artists = Backbone.Collection.extend({
 
 	initialize : function(models, options) {
 		//get the tags initially
-		this.getArtists();
+		//this.getArtists();
 		this.searches = [];
 		//make a request whenever there is a change in the tags
 		this.on("add", this.added);
@@ -84,7 +84,7 @@ RING.Artists = Backbone.Collection.extend({
 		//this.listenTo("change:checked", this.searchTags);
 		this.maxLength = 18;
 	},
-	getArtists : function() {
+	getArtists : function(callback) {
 		var reqString = window.location + "get?type=top";
 		var self = this;
 		$.ajax(reqString, {
@@ -94,6 +94,7 @@ RING.Artists = Backbone.Collection.extend({
 					silent : true,
 				});
 				self.makeVisible();
+				callback();
 			},
 			error : function() {
 				console.error("could not fetch that data");

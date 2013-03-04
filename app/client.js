@@ -30,15 +30,13 @@ var artists = require('./artists');
 				break;
 			case "week":
 				var results = {
-					artist : null,
-					tumblr : [],
-					twitter : []
+					posts : [],
 				};
-				getArtistPastWeek(query.artist, results, function(err) {
+				var artist = artists.getArtist(query.artist);
+				getArtistPastWeek(artist, results, function(err) {
 					if(err) {
 						console.log(err)
 					} else {
-						results.artist = artists.getArtist(query.artist);
 						res.send(results);
 					}
 				})
@@ -71,78 +69,85 @@ var artists = require('./artists');
 
 	var cache = {
 		lastUpdate : 0,
-		tumblr : [],
-		twitter : []
+		posts : [],
 	};
 
 	//put everything in the tmpCache until it's all completed
 	var tmpCache = {
 		lastUpdate : 0,
-		tumblr : [],
-		twitter : []
+		posts : [],
 	};
 
 	function cachePastWeek(topLevelCallback) {
 		var topArtists = artists.getTopArtists();
 		async.each(topArtists, function(artist, callback) {
-			getArtistPastWeek(artist.name, tmpCache, callback);
+			getArtistPastWeek(artist, tmpCache, callback);
 		}, function() {
 			tmpCache.lastUpdate = new Date();
 			//remove the orphans from the tumblr list
-			tmpCache.tumblr = removeOrphans(tmpCache.tumblr);
+			for (var i=0; i<tmpCache.posts.length; i++){
+				var artistPosts = tmpCache.posts[i];
+				artistPosts.tumblr = removeOrphans(artistPosts.tumblr);
+			}
 			cache = tmpCache;
 			//empty the tmp cache
 			tmpCache = {
 				lastUpdate : 0,
-				tumblr : [],
-				twitter : []
+				posts : [],
 			};
 			topLevelCallback();
 		})
 	}
 
 	function getArtistPastWeek(artist, results, topLevelCallback) {
+		//else retrieve it from the database
+		var artistPosts = {
+			artist : artist,
+			tumblr : [],
+			twitter : [],
+		}
 		var timeTo = new Date();
 		var timeFrom = new Date(timeTo.getFullYear(), timeTo.getMonth(), parseInt(timeTo.getDate()) - 7);
 		async.parallel([
 		function(tumblrGetCallback) {
-			tumblrDB.getArtistBetweenTime(artist, timeFrom, timeTo, function(posts) {
-				results.tumblr = results.tumblr.concat(posts);
+			tumblrDB.getArtistBetweenTime(artist.name, timeFrom, timeTo, function(posts) {
+				artistPosts.tumblr = artistPosts.tumblr.concat(posts);
 				tumblrGetCallback(null);
 			});
 		},
 
 		function(twitterGetCallback) {
-			twitterDB.getArtistBetweenTime(artist, timeFrom, timeTo, function(tweets) {
-				results.twitter = results.twitter.concat(tweets);
+			twitterDB.getArtistBetweenTime(artist.name, timeFrom, timeTo, function(tweets) {
+				artistPosts.twitter = artistPosts.twitter.concat(tweets);
 				twitterGetCallback(null);
 			});
 		}], function() {
+			results.posts.push(artistPosts);
 			topLevelCallback(null)
 		})
 	}
-	
-	//TODO: remove all of the nodes whose origin node is not in the set
-	function removeOrphans(tumblrList){
+
+	//remove all of the nodes whose origin node is not in the set
+	function removeOrphans(tumblrList) {
 		var ids = [];
 		//make a list of the ids
-		for (var i = 0; i < tumblrList.length; i++){
+		for(var i = 0; i < tumblrList.length; i++) {
 			ids.push(tumblrList[i].id);
 		}
 		//go through and add reblogs whose origin is in the list
 		var ret = [];
-		for (var i = 0; i < tumblrList.length; i++){
+		for(var i = 0; i < tumblrList.length; i++) {
 			var post = tumblrList[i];
-			if (post.reblogged_from !== null){
+			if(post.reblogged_from !== null) {
 				//if it's parent is in the list
 				var index = ids.indexOf(post.reblogged_from);
-				if (index >=0){
+				if(index >= 0) {
 					ret.push(post);
 				}
 			} else {
 				ret.push(post);
 			}
-		} 
+		}
 		return ret;
 	}
 

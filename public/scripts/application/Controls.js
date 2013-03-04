@@ -17,6 +17,7 @@ RING.Controls = Backbone.Model.extend({
 		//loading info in the corner
 		"visiblePosts" : 0,
 		"loading" : 0,
+		"loadingText" : "",
 	},
 	initialize : function(attributes, options) {
 		var blue = new THREE.Color().setRGB(40 / 255, 170 / 255, 225 / 255);
@@ -43,11 +44,16 @@ RING.Controls = Backbone.Model.extend({
 		this.reblogLevel = new RING.ReblogLevel({
 			model : this,
 		});
+		this.loadingScreen = new RING.LoadingScreen({
+			model : this,
+		});
 		if(!RING.installation) {
 			this.search = new RING.Search({
 				model : this,
 			});
 		}
+		//start the loading
+		this.loadCache();
 	},
 	updateArtists : function(model, checked) {
 		if(checked) {
@@ -162,7 +168,86 @@ RING.Controls = Backbone.Model.extend({
 				model.set("visible", true);
 			}, RING.Util.randomInt(0, delayTime), model);
 		};
-
+		/*
+		 //update the counter
+		 var visibleTumblrs = RING.tumblrCollection.where({
+		 "visible" : true
+		 })
+		 var visibleTwitter = RING.twitterCollection.where({
+		 "visible" : true
+		 })
+		 this.set("visiblePosts", visibleTumblrs.length + visibleTwitter.length);
+		 */
+	},
+	//this is the loading sequence for all of the info
+	loadCache : function() {
+		var reqString = window.location + "get?type=cache";
+		var self = this;
+		self.set("loadingText", "Connecting to server")
+		$.ajax(reqString, {
+			success : function(response) {
+				var posts = response.posts;
+				//increment the loading bar
+				self.set("loading", self.get('loading') + 1);
+				self.set("loadingText", "Fetching Artists Posts")
+				//for each artist, add it to the twitter and tumblr posts
+				for(var i = 0; i < posts.length; i++) {
+					var post = posts[i];
+					setTimeout(function(post) {
+						self.set("loadingText", "Loading posts from " + post.artist.name);
+						RING.tumblrCollection.addArtist(post);
+						RING.twitterCollection.addArtist(post);
+						//add the artist to the list also
+						//make an artist
+						var artist = new RING.Artist(post.artist);
+						//add that artist to the collection
+						self.artistList.add(artist, {
+							merge : false,
+						});
+						//increment the loading bar
+						self.set("loading", self.get('loading') + 1);
+					}, i * 10, post);
+				}
+			},
+			error : function() {
+				console.error("could not get that artist");
+			}
+		})
+	},
+	loadArtists : function(artistName, callback) {
+		//search the artist for the past week
+		artistName = encodeURIComponent(artistName);
+		var reqString = window.location + "get?type=week&artist=" + artistName;
+		var self = this;
+		$.ajax(reqString, {
+			success : function(response) {
+				if(response.artist !== null) {
+					//update the tumblr and twitter collections with the results
+					RING.tumblrCollection.add(response.tumblr, {
+						merge : false,
+					});
+					RING.twitterCollection.add(response.twitter, {
+						merge : false,
+					});
+					//gotta do all that loading bullshit
+					//need to do this just on the new artists
+					RING.tumblrCollection.loadArtist(artistName);
+					RING.twitterCollection.loadArtist(artistName);
+					//make an artist
+					var artist = new RING.Artist(response.artist);
+					//add that artist to the collection
+					self.model.artistList.add(artist, {
+						merge : false,
+					});
+					callback();
+					//check that artist
+					//artist.set("checked", true);
+				}
+			},
+			error : function() {
+				console.error("could not get that artist");
+			}
+		})
 	},
 });
 
@@ -194,11 +279,13 @@ RING.Controls.View = Backbone.View.extend({
 		}
 	},
 	render : function(model) {
+		/*
 		if(this.model.get("loading") > 0) {
-			this.$loading.show(0);
+		this.$loading.show(0);
 		} else {
-			this.$loading.hide(0);
+		this.$loading.hide(0);
 		}
+		*/
 		//set the date range stuff
 		var startTime = this.model.get("startTime");
 		var endTime = this.model.get("endTime");
@@ -217,10 +304,7 @@ RING.Controls.View = Backbone.View.extend({
 				this.$reblogLevel.html("<span class='titleText'>DISPLAYING:</span><span class='titleText purpleText'>PRIMARY POSTS</span><span class='titleText'>AND</span><span class='titleText purpleText'>REBLOGS OF REBLOGS</span>");
 				break;
 		}
-		var visiblePosts = 0;
-		if(RING.tumblrCollection && RING.twitterCollection) {
-			visiblePosts = RING.tumblrCollection.length + RING.twitterCollection.length;
-		}
+		var visiblePosts = this.model.get("visiblePosts");
 		this.$visiblePosts.html(visiblePosts);
 
 		this.$dateRange.html(startText + " TO " + endText);
@@ -308,7 +392,7 @@ RING.DatePicker = Backbone.View.extend({
 		this.listenTo(this.model, "change:endTime", this.render);
 		this.$dots = []
 		//make the dots
-		for(var i = 0; i <= 7; i++) {
+		for(var i = 0; i <= 6; i++) {
 			var left = (100 / 6) * i;
 			var dot = $("<div class='dot'></div>").appendTo(this.$slider);
 			dot.css({
@@ -519,8 +603,9 @@ RING.Search = Backbone.View.extend({
 						self.model.artistList.add(artist, {
 							merge : false,
 						});
+						callback();
 						//check that artist
-						artist.set("checked", true);
+						//artist.set("checked", true);
 					}
 				},
 				error : function() {
@@ -530,6 +615,56 @@ RING.Search = Backbone.View.extend({
 		}
 	}
 })
+
+RING.LoadingScreen = Backbone.View.extend({
+
+	className : "loadingScreen",
+
+	events : {
+		"click .loaded" : "begin",
+	},
+
+	initialize : function() {
+		this.$loadingArea = $("#loadedArea");
+		this.$loadingText = $("#loadingText");
+		this.setElement($("#loadingBar"));
+		this.listenTo(this.model, "change:loadingText", this.updateText);
+		this.listenTo(this.model, "change:loading", this.updateProgress);
+	},
+	updateText : function(model, text) {
+		this.$loadingText.html(text);
+	},
+	updateProgress : function(model, loadedCount) {
+		var total = 1;
+		if(RING.installation) {
+			total = 15;
+		} else {
+			total = 15;
+		}
+		var percentage = Math.round((loadedCount / total) * 100);
+		percentage += "%";
+		this.$loadingArea.css({
+			width : percentage,
+		});
+		//turn the bar into a next button
+		if(percentage === "100%") {
+			//it's done loading
+			this.updateText(this.model, "BEGIN");
+			this.$el.addClass("begin").transition({
+				width : "126px",
+			}, 200).click(this.begin.bind(this));
+		}
+	},
+	begin : function() {
+		$("#loadingScreen").transition({
+			width : "0px"
+		}, 200, function() {
+			$(this).css({
+				"z-index" : -1000,
+			})
+		})
+	}
+});
 
 Date.prototype.monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 

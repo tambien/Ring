@@ -213,15 +213,21 @@ RING.Post.View = Backbone.View.extend({
 		RING.scene.remove(this.object);
 	},
 	setVisible : function(model, visible) {
-		//var self = this;
-		//setTimeout(function(model) {
-		//just move it off the screen to make it invisible
-		if(visible) {
-			this.position(model);
-		} else {
-			RING.Particles.position(model, -1000, -1000);
-		}
-		//}, RING.Util.randomInt(0, 600), model);
+		var self = this;
+		setTimeout(function(model) {
+			//just move it off the screen to make it invisible
+			if(visible) {
+				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") + 1, {
+					silent : false,
+				})
+				self.position(model);
+			} else {
+				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") - 1, {
+					silent : false,
+				})
+				RING.Particles.position(model, -1000, -1000);
+			}
+		}, RING.Util.randomInt(0, 600), model);
 	},
 	positionElement : function(x, y) {
 		var css = {	};

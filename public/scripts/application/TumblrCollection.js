@@ -7,7 +7,7 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		this.on("add", this.postAdded);
 		this.on("remove", this.postRemoved);
 		this.primary = [];
-		this.sync();
+		//this.sync();
 	},
 	//connects all reblogs with a line
 	connectReblogs : function() {
@@ -45,19 +45,20 @@ RING.TumblrCollection = Backbone.Collection.extend({
 			return model.get('reblogged_from') === null;
 		})
 	},
-	sync : function() {
+	sync : function(callback) {
 		//get the tumblr posts from the database
 		var reqString = window.location + "get?type=tumblr";
 		var self = this;
 		if(RING.dontLoad) {
-			RING.loaded();
+			callback();
 		} else {
 			$.ajax(reqString, {
 				success : function(response) {
 					self.update(response);
-					self.allLoaded();
-					RING.loaded();
+					//self.allLoaded();
+					//RING.loaded();
 					console.log("tumblr posts loaded");
+					callback();
 				},
 				error : function() {
 					alert("there has been an error. try reloading the page");
@@ -65,6 +66,29 @@ RING.TumblrCollection = Backbone.Collection.extend({
 				}
 			})
 		}
+	},
+	addArtist : function(posts) {
+		var artistName = posts.artist.name;
+		this.add(posts.tumblr, {
+			merge : false
+		});
+		var artistPosts = this.where({
+			artist : artistName
+		});
+		_.forEach(artistPosts, function(model) {
+			model.allLoaded();
+		});
+		_.forEach(artistPosts, function(model) {
+			if(model.get("reblogged_from") === null) {
+				model.positionReblogs();
+			} else {
+				model.view.drawEdgeToOrigin();
+			}
+		});
+		//refilter the primary posts
+		this.primary = this.filter(function(model) {
+			return model.get('reblogged_from') === null;
+		});
 	},
 	//loads a single artist
 	//connects all of the reblogs, etc
@@ -85,6 +109,6 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		//refilter the primary posts
 		this.primary = this.filter(function(model) {
 			return model.get('reblogged_from') === null;
-		})
+		});
 	}
 });

@@ -23,12 +23,12 @@ var RING = function() {
 		setupStats();
 		//bind the basic events
 		bindEvents();
-		//make the controls
-		RING.controls = new RING.Controls();
 		//make the tumblr collection
 		RING.tumblrCollection = new RING.TumblrCollection();
 		RING.twitterCollection = new RING.TwitterCollection();
 		RING.Particles.initialize();
+		//make the controls
+		RING.controls = new RING.Controls();
 		//start it off
 		render();
 	}

@@ -67,24 +67,55 @@
 
 		}
 	</script>
-	<div id="loadingScreen">
-		LOADING
-	</div>
 	<img id="ringTitle" src="images/Ring_Title.png">
+	<div id="loadingScreen">
+		<div id="introducing">
+			<span class="titleText">INTRODUCING RING.</span>
+			<span class="titleText purpleText">INTRODUCING EMUZE.</span>
+			<br>
+			<br>
+			<span class="titleText">Be Connected. Be Discovered.</span>
+			<span class="titleText purpleText">Be eMuzed.</span>
+			<br>
+			<br>
+			<span class="titleText">
+				eMuze is a cool and simple way for aspiring talent to showcase their
+				digital selves and connect with fans, talent, and professionals.
+				<br>
+				<br>
+				Ring allows you to understand how the latest news about the hottest artists
+				at SXSW moves through social media. From the first tweet to the final reblog,
+				watch how big news spreads through the world. 
+				<br>
+				<br>
+				Ring is on Twitter, too! Follow @ring for cool facts about what we're up to, 
+				and tweet @ring with the new hashtags you think we should include.   
+			</span>
+		</div>
+		<div id="loadingBar">
+			<div id='loadedArea'></div>
+			<div id='loadingText' class='titleText'>LOADING</div>
+		</div>
+	</div>
 	<img id="emuzelogo" src="images/eMuze_logomark_small.png">
 	<div id="container">
 		<div id="controls">
 			<div id="dataDisplay">
-				<div><span class='titleText'>SHOWING TAGS FOR: </span><span id="dateRange"class='titleText purpleText'>MARCH 5 TO MARCH 9</span></div>
+				<div>
+					<span class='titleText'>SHOWING TAGS FOR: </span><span id="dateRange"class='titleText purpleText'>MARCH 5 TO MARCH 9</span>
+				</div>
 				<div id="reblogDisplay"></div>
-				<div><span id="visiblePosts" class='titleText purpleText'>0</span><span class='titleText'>POSTS FOUND.</span></div>
+				<div>
+					<span id="visiblePosts" class='titleText purpleText'>0</span><span class='titleText'>POSTS FOUND.</span>
+				</div>
 			</div>
 			<div id="tags">
-				<div id="title" class='titleText'>TOP ARTISTS</div>
+				<div id="title" class='titleText'>
+					TOP ARTISTS
+				</div>
 				<div id = "tagsList"></div>
 			</div>
 		</div>
-		
 		<div id="canvas"></div>
 	</div>
 </body>
