@@ -43,6 +43,9 @@ RING.Controls = Backbone.Model.extend({
 		this.reblogLevel = new RING.ReblogLevel({
 			model : this,
 		});
+		this.search = new RING.Search({
+			model : this,
+		});
 		//make the emuze link
 		$("#visitEmuze").click(function() {
 			window.open("http://www.emuze.com", '_blank');
@@ -425,6 +428,85 @@ RING.ReblogLevel = Backbone.View.extend({
 		this.model.set("reblogLevel", ui.value);
 	}
 });
+
+RING.Search = Backbone.View.extend({
+
+	className : "search",
+
+	events : {
+		"click #button" : "searchArtist"
+	},
+
+	initialize : function() {
+		this.$title = $("<div id='title' class='titleText'>SEARCH FOR A TAG</div>").appendTo(this.$el);
+		this.$search = $("<input class='titleText' id='search'/>").appendTo(this.$el);
+		this.$button = $("<div class='titleText' id='button'>SEARCH</div>").appendTo(this.$el);
+		this.$el.insertAfter($("#tags"));
+		this.getAutoCompleteList();
+	},
+	getAutoCompleteList : function(model) {
+		var reqString = window.location + "get?type=artists";
+		var self = this;
+		$.ajax(reqString, {
+			success : function(response) {
+				console.log('got auto complete');
+				self.addAutoComplete(response);
+			},
+			error : function() {
+				console.error("could not get autocomplete list");
+			}
+		})
+	},
+	addAutoComplete : function(list) {
+		this.$search.autocomplete({
+			source : list
+		});
+	},
+	searchArtist : function() {
+		//get the artist from the search box
+		var artistName = this.$search.val();
+		//if the artist is already in the list, check it
+		var found = this.model.artistList.where({
+			name : artistName,
+		});
+		if(found.length>0) {
+			found[0].set("checked", true);
+		} else {
+			//search the artist for the past week
+			var reqString = window.location + "get?type=week&artist=" + artistName;
+			var self = this;
+			$.ajax(reqString, {
+				success : function(response) {
+					console.log('got artist');
+					if(response.artist !== null) {
+						//update the tumblr and twitter collections with the results
+						RING.tumblrCollection.add(response.tumblr, {
+							merge : false,
+						});
+						RING.twitterCollection.add(response.twitter, {
+							merge : false,
+						});
+						//gotta do all that loading bullshit
+						//need to do this just on the new artists
+						RING.tumblrCollection.loadArtist(artistName);
+						RING.twitterCollection.loadArtist(artistName);
+						//make an artist
+						var artist = new RING.Artist(response.artist);
+						//add that artist to the collection
+						self.model.artistList.add(artist, {
+							merge : false,
+						});
+						//check that artist
+						artist.set("checked", true);
+					}
+				},
+				error : function() {
+					console.error("could not get that artist");
+				}
+			})
+		}
+	}
+})
 
 Date.prototype.monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 

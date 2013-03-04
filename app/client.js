@@ -30,6 +30,7 @@ var artists = require('./artists');
 				break;
 			case "week":
 				var results = {
+					artist : null,
 					tumblr : [],
 					twitter : []
 				};
@@ -37,6 +38,7 @@ var artists = require('./artists');
 					if(err) {
 						console.log(err)
 					} else {
+						results.artist = artists.getArtist(query.artist);
 						res.send(results);
 					}
 				})
@@ -141,8 +143,6 @@ var artists = require('./artists');
 				ret.push(post);
 			}
 		} 
-		var diff = ids.length - ret.length;
-		console.log("cut %d from %d", diff, ids.length);
 		return ret;
 	}
 

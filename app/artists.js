@@ -63,6 +63,16 @@ var twitter = require('./twitter/twitter-db');
 	function getTopArtists() {
 		return artists.slice(0, 14);
 	};
+	
+	function getArtist(name){
+		for (var i = 0; i < artists.length; i++){
+			if (artists[i].name === name){
+				return artists[i];
+			}
+		}
+		return null;
+		
+	}
 
 	//gets the tags from the google doc
 	//OLD - https://spreadsheets.google.com/feeds/list/0AiVz2Kh7uRRBdHliYVFpeGNGNFlqelBxb09MaFFTYXc/od6/public/values?alt=json
@@ -197,6 +207,8 @@ var twitter = require('./twitter/twitter-db');
 	module.exports.getHandles = getHandles;
 
 	module.exports.getArtists = getArtists;
+	
+	module.exports.getArtist = getArtist;
 
 	module.exports.getArtistFromHandleID = getArtistFromHandleID;
 

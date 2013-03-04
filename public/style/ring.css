@@ -102,8 +102,7 @@ body {
 	cursor: pointer;
 	color: #B3B3B3;
 }
-
-#visitEmuze{
+#visitEmuze {
 	position: absolute;
 	left: 15px;
 	top: 156px;
@@ -212,7 +211,6 @@ body {
 	background-color: #222;
 	height: 70px;
 }
-
 .datePicker #title {
 	padding: 10px;
 	color: white;
@@ -241,7 +239,7 @@ body {
 	top: 0px;
 	z-index: 10000;
 }
-.datePicker .date{
+.datePicker .date {
 	position: absolute;
 	top: 16px;
 	left: 0px;
@@ -251,7 +249,6 @@ body {
 	text-align: left;
 	margin-left: -3px;
 }
-
 /*
  * REBLOG LEVEL
  */
@@ -291,7 +288,6 @@ body {
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 }
-
 .reblogLevel #notes {
 	position: absolute;
 	width: 100%;
@@ -323,6 +319,57 @@ body {
 	left: 0px;
 	top: 0px;
 	text-align: right;
+}
+/*
+ * SEARCH
+ */
+.ui-autocomplete {
+	font-size: 12px!important;
+	width: 230px;
+	max-height: 100px;
+	overflow-y: auto;
+	/* prevent horizontal scrollbar */
+	overflow-x: hidden;
+	z-index: 1000000!important;
+}
+.search {
+	position: relative;
+	margin-top: 15px;
+	padding-bottom: 5px;
+	border-left: solid 5px #9E41C3;
+	background-color: #222;
+	height: 75px;
+	overflow: hidden;
+}
+.search #title {
+	padding: 10px;
+	color: white;
+}
+.search #search {
+	width: 230px;
+	color: black;
+	position: absolute;
+	height: 20px;
+	width: 240px;
+	color: black;
+	left: 10px;
+	top: 40px;
+}
+.search #button {
+	position: absolute;
+	height: 20px;
+	width: 90px;
+	color: white;
+	left: 270px;
+	top: 40px;
+	padding-top: 6px;
+	text-align: center;
+	background-color: #9E41C3;
+	cursor: pointer;
+}
+.search #button:active{
+	color: #9E41C3;
+	background-color: white;
 }
 /*
  * LOADING

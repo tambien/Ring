@@ -186,3 +186,4 @@ var RING = function() {
 
 //development version
 RING.dev = true;
+RING.dontLoad = false;

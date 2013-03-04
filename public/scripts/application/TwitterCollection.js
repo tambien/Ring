@@ -27,17 +27,30 @@ RING.TwitterCollection = Backbone.Collection.extend({
 		//get the twitter posts from the database
 		var reqString = window.location + "get?type=twitter";
 		var self = this;
-		$.ajax(reqString, {
-			success : function(response) {
-				self.update(response);
-				self.allLoaded();
-				RING.loaded();
-				console.log("twitter tweets loaded");
-			},
-			error : function() {
-				alert("there has been an error. try reloading the page");
-				console.error("could not fetch that data");
-			}
-		})
+		if(RING.dontLoad) {
+			RING.loaded();
+		} else {
+			$.ajax(reqString, {
+				success : function(response) {
+					self.update(response);
+					self.allLoaded();
+					RING.loaded();
+					console.log("twitter tweets loaded");
+				},
+				error : function() {
+					alert("there has been an error. try reloading the page");
+					console.error("could not fetch that data");
+				}
+			})
+		}
+	}, 
+	//connects all of the reblogs, etc
+	loadArtist : function(artist) {
+		var artistPosts = this.where({
+			artist : artist
+		});
+		_.forEach(artistPosts, function(model) {
+			model.allLoaded();
+		});
 	}
 });

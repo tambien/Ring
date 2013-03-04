@@ -77,9 +77,12 @@ RING.Artists = Backbone.Collection.extend({
 	initialize : function(models, options) {
 		//get the tags initially
 		this.getArtists();
+		this.searches = [];
 		//make a request whenever there is a change in the tags
-		//this.on("add", this.makeVisible);
+		this.on("add", this.added);
+		this.on("add", this.makeVisible);
 		//this.listenTo("change:checked", this.searchTags);
+		this.maxLength = 18;
 	},
 	getArtists : function() {
 		var reqString = window.location + "get?type=top";
@@ -87,7 +90,9 @@ RING.Artists = Backbone.Collection.extend({
 		$.ajax(reqString, {
 			success : function(response) {
 				console.log("artist list loaded");
-				self.update(response);
+				self.update(response, {
+					silent : true,
+				});
 				self.makeVisible();
 			},
 			error : function() {
@@ -110,13 +115,22 @@ RING.Artists = Backbone.Collection.extend({
 		//make the most popular posts visible in the list
 		for(var i = 0; i < this.length; i++) {
 			var model = this.models[i];
-			if(i < 26) {
+			if(i < this.maxLength) {
 				model.set('visible', true);
 			} else {
 				model.set('visible', false);
 				//if it's invisible it's not checked either
 				model.set('checked', false);
 			}
+		}
+	},
+	added : function(model) {
+		this.searches.push(model);
+		if (this.length>this.maxLength){
+			var remove = this.searches.shift()
+			remove.set("visible", false);
+			remove.set("checked", false);
+			this.remove(remove);
 		}
 	},
 	//get the color of an artist

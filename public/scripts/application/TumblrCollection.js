@@ -38,7 +38,7 @@ RING.TumblrCollection = Backbone.Collection.extend({
 			if(model.get("reblogged_from") === null) {
 				model.positionReblogs();
 			} else {
-				model.view.drawEdgeToOrigin();	
+				model.view.drawEdgeToOrigin();
 			}
 		});
 		this.primary = this.filter(function(model) {
@@ -49,17 +49,42 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		//get the tumblr posts from the database
 		var reqString = window.location + "get?type=tumblr";
 		var self = this;
-		$.ajax(reqString, {
-			success : function(response) {
-				self.update(response);
-				self.allLoaded();
-				RING.loaded();
-				console.log("tumblr posts loaded");
-			},
-			error : function() {
-				alert("there has been an error. try reloading the page");
-				console.error("could not fetch that data");
+		if(RING.dontLoad) {
+			RING.loaded();
+		} else {
+			$.ajax(reqString, {
+				success : function(response) {
+					self.update(response);
+					self.allLoaded();
+					RING.loaded();
+					console.log("tumblr posts loaded");
+				},
+				error : function() {
+					alert("there has been an error. try reloading the page");
+					console.error("could not fetch that data");
+				}
+			})
+		}
+	},
+	//loads a single artist
+	//connects all of the reblogs, etc
+	loadArtist : function(artist) {
+		var artistPosts = this.where({
+			artist : artist
+		});
+		_.forEach(artistPosts, function(model) {
+			model.allLoaded();
+		});
+		_.forEach(artistPosts, function(model) {
+			if(model.get("reblogged_from") === null) {
+				model.positionReblogs();
+			} else {
+				model.view.drawEdgeToOrigin();
 			}
+		});
+		//refilter the primary posts
+		this.primary = this.filter(function(model) {
+			return model.get('reblogged_from') === null;
 		})
 	}
 });
