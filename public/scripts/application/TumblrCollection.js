@@ -53,9 +53,11 @@ RING.TumblrCollection = Backbone.Collection.extend({
 			success : function(response) {
 				self.update(response);
 				self.allLoaded();
+				RING.loaded();
 				console.log("tumblr posts loaded");
 			},
 			error : function() {
+				alert("there has been an error. try reloading the page");
 				console.error("could not fetch that data");
 			}
 		})

@@ -13,7 +13,7 @@ var http = require('http');
 
 	//the number of posts to return from a search
 	//max 20
-	var requestLimit = 20;
+	var requestLimit = 10;
 
 	/*
 	 * posts in the form

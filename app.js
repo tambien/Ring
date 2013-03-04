@@ -58,7 +58,7 @@ function(crawlInitially) {
 }], function() {
 	console.log("finished initial retrieval and crawl");
 });
-//updating the database every 30 minutes
+//updating the database every 60 minutes
 setInterval(function() {
 	crawler.update(function(err) {
 		console.log('crawl completed')
@@ -66,20 +66,20 @@ setInterval(function() {
 			console.log(err);
 		}
 	});
-	//every 30 minutes
-}, 30 * 60 * 1000);
+	//every 60 minutes
+}, 60 * 60 * 1000);
 //update the list from the spreadsheet every 2 hours
 setInterval(function() {
 	artists.retrieve(function() {
 		console.log("got the artists from the spreadsheet");
 	});
-	//every 2 hours
-}, 2 * 60 * 60 * 1000);
-//update the cache every 20 minutes
+	//every 12 hours
+}, 12 * 60 * 60 * 1000);
+//update the cache every 60 minutes
 setInterval(function() {
 	client.cachePastWeek(function() {
 		console.log('cached past week');
 	})
-}, 20 * 60 * 1000);
+}, 60 * 60 * 1000);
 //print a message
 console.log('RING Started');

@@ -10,7 +10,7 @@ $(function() {
 var RING = function() {
 
 	var $container;
-	
+
 	var rtree = new RTree(10);
 
 	//INITIALIZATION///////////////////////////////////////////////////////////
@@ -19,6 +19,7 @@ var RING = function() {
 		$container = $("#container");
 		//setup the rendering context
 		setupTHREE();
+		addOctagon();
 		setupStats();
 		//bind the basic events
 		bindEvents();
@@ -30,6 +31,19 @@ var RING = function() {
 		RING.Particles.initialize();
 		//start it off
 		render();
+	}
+	
+	//a loaded counter which will remove the loading indicator
+	var loadCounter = 0;
+	function loaded(){
+		loadCounter++;
+		if (loadCounter === 2){
+			$("#loadingScreen").fadeTo(500, 0, function(){
+				$(this).css({
+					"z-index" : -100,
+				})
+			})
+		}
 	}
 
 	//THREE////////////////////////////////////////////////////////////////////
@@ -60,6 +74,24 @@ var RING = function() {
 		RING.camera.updateProjectionMatrix();
 		RING.renderer.setSize(RING.width, RING.height);
 	}
+	
+	//makes the octagon in the center
+	function addOctagon(){
+		var octogonGeometry = new THREE.CircleGeometry(400, 8);
+		var octogon = new THREE.Mesh(octogonGeometry, new THREE.MeshBasicMaterial({
+			color : 0x111111,
+			opacity : 1,
+			wireframe : false,
+			wireframeLinewidth : 1,
+		}));
+		//position it
+		octogon.position.x = 0;
+		octogon.position.y = 0;
+		octogon.position.z = 1;
+		octogon.rotation.z = Math.PI / 8;
+		//add it to the scene
+		RING.scene.add(octogon);
+	}
 
 	var stats;
 
@@ -69,6 +101,7 @@ var RING = function() {
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
 			stats.domElement.style.top = '0px';
+			stats.domElement.style.right = '0px';
 			$container.append(stats.domElement);
 		}
 	}
@@ -81,20 +114,45 @@ var RING = function() {
 	}
 
 	function mouseClicked(event) {
+		event.preventDefault();
 		//remove any other post displays
 		$(".post").remove();
-		//find a new post to display
-		event.preventDefault();
-		var vector = new THREE.Vector3((event.offsetX / RING.width ) * 2 - 1, -(event.offsetY / RING.height ) * 2 + 1, 0.5);
+		//find the new object
+		var mouseX = event.offsetX;
+		var mouseY = event.offsetY;
+		var vector = new THREE.Vector3((mouseX / RING.width ) * 2 - 1, -(mouseY / RING.height ) * 2 + 1, 0);
 		projector.unprojectVector(vector, RING.camera);
-
-		var raycaster = new THREE.Raycaster(RING.camera.position, vector.sub(RING.camera.position).normalize());
-
-		var intersects = raycaster.intersectObjects(RING.scene.children);
-		if(intersects.length > 0) {
-			var intersected = intersects[0].object;
-			if(intersected.onclick) {
-				intersected.onclick();
+		var dir = vector.sub(RING.camera.position).normalize();
+		var ray = new THREE.Ray(RING.camera.position, dir);
+		var distance = -RING.camera.position.z / dir.z;
+		var pos = RING.camera.position.clone().add(dir.multiplyScalar(distance));
+		var width = 25;
+		var res = rtree.search({
+			x : pos.x - width,
+			y : pos.y - width,
+			w : width * 2,
+			h : width * 2,
+		})
+		//get the post which is closest to the center of the mouse
+		var closest;
+		var closestDist = 10000;
+		for(var i = 0; i < res.length; i++) {
+			var xDist = res[0].get('x') - pos.x;
+			var yDist = res[0].get('y') - pos.y;
+			var dist = Math.sqrt(xDist * xDist + yDist * yDist);
+			if(dist < closestDist) {
+				closestDist = dist;
+				closest = res[i];
+			}
+		}
+		if(closest) {
+			//check that it was actually within the element
+			var box = closest.boundingBox;
+			var inX = pos.x > box.x && pos.x < box.x + box.w;
+			var inY = pos.y > box.y && pos.y < box.y + box.h;
+			closest.clicked(mouseX, mouseY);
+			if(inX && inY) {
+				
 			}
 		}
 	}
@@ -121,6 +179,7 @@ var RING = function() {
 		initialize : initialize,
 		start : start,
 		rtree : rtree,
+		loaded: loaded,
 	};
 
 }();

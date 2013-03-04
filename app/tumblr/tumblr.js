@@ -119,9 +119,14 @@ var async = require("async");
 			//if it's older than 1 month, it does not need to be updated
 			var postTime = new Date(retPost.timestamp * 1000);
 			var now = new Date();
-			var lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+			var lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+			//also if the post has no photo AND no text, don't put it in
+			var nothing = (post.photo === '') && (post.text === '');
+			if (nothing){
+				console.log("rejected");
+			}
 			//now put hte post in our DB
-			if(postTime > lastMonth) {
+			if(postTime > lastMonth && !nothing) {
 				//make sure the artist gets added to the db
 				async.parallel([
 				function(putDBCallback) {

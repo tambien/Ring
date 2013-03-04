@@ -117,6 +117,12 @@ var artists = require('./artists');
 			topLevelCallback(null)
 		})
 	}
+	
+	//TODO: remove all of the nodes whose origin node is not in the set
+	function removeOrphans(tumblrList, callback){
+		//var list = 
+		//for 
+	}
 
 	/*
 	* QUERY FUNCTIONS

@@ -67,10 +67,20 @@
 
 		}
 	</script>
-	<!--img id="emuzelogo" src="images/eMuze_logomark_small.png"-->
+	<div id="loadingScreen">
+		LOADING
+	</div>
+	<img id="ringTitle" src="images/Ring_Title.png">
+	<img id="emuzelogo" src="images/eMuze_logomark_small.png">
 	<div id="container">
 		<div id="controls">
+			<div id="dataDisplay">
+				<div><span class='titleText'>SHOWING TAGS FOR: </span><span id="dateRange"class='titleText purpleText'>MARCH 5 TO MARCH 9</span></div>
+				<div id="reblogDisplay"></div>
+				<div><span id="visiblePosts" class='titleText purpleText'>0</span><span class='titleText'>POSTS FOUND.</span></div>
+			</div>
 			<div id="tags">
+				<div id="title" class='titleText'>TOP TAGS</div>
 				<div id = "tagsList"></div>
 			</div>
 		</div>

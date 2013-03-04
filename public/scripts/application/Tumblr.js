@@ -8,7 +8,7 @@ RING.Tumblr = RING.Post.extend({
 
 	initialize : function(attributes, options) {
 		this.superInit();
-		this.set("style",  RING.Util.choose(['circle_grad', 'circle']))
+		this.set("style", RING.Util.choose(['circle_grad', 'circle']))
 		//an array to store all the reblogs
 		this.reblogs = [];
 		//resize if it's a reblog
@@ -86,23 +86,12 @@ RING.Tumblr = RING.Post.extend({
 			reblog.positionReblogs();
 		}
 	},
-	moveLine : function(){
+	moveLine : function() {
 		var x = this.get("x");
 		var y = this.get("y");
 		this.systemNodes[0].x = x;
 		this.systemNodes[0].y = y;
 	},
-	/*
-	 positionReblogs : function() {
-	 //make the system nodes for the l-system-type structure
-
-	 for(var i = 0, len = this.reblogs.length; i < len; i++) {
-	 var reblog = this.reblogs[i];
-	 reblog.positionFromSystemNode();
-	 //reblog.positionReblogs();
-	 }
-	 },
-	 */
 	makeReblogsVisible : function(level) {
 		_.forEach(this.reblogs, function(reblog, index) {
 			if(reblog.get('reblog_level') <= level) {
@@ -197,11 +186,15 @@ RING.Tumblr.View = RING.Post.View.extend({
 			}
 		}
 	},
+	clicked : function(x, y) {
+
+	},
 	createElement : function() {
+		this.$el.html(" ");
 		this.$title = $("<div id='title'>" + this.model.get("blog_name") + "</div>").appendTo(this.$el);
 		var text = this.model.get("text");
 		if(text.length > 500) {
-			text = text.slice(0, 497);
+			text = text.slice(0, 498);
 			text += "...";
 		}
 		this.$text = $("<div id='text'>" + text + "</div>").appendTo(this.$el);
@@ -222,15 +215,6 @@ RING.Tumblr.View = RING.Post.View.extend({
 	drawEdgeToOrigin : function() {
 		//if there are already lines, don't draw some more
 		if(!this.line) {
-			/*
-			var geometry = new THREE.Geometry();
-				//geometry.vertices.push(this.model.systemNodes[0]);
-				//geometry.vertices.push(origin.systemNodes[0]);
-				for(var i = 0; i < this.model.systemNodes.length; i++) {
-					geometry.vertices.push(this.model.systemNodes[i]);
-				}
-				this.line = new THREE.Line(geometry, RING.Tumblr.lineMaterial);
-				*/
 			var origin = this.model.origin;
 			if(origin) {
 				var geometry = new THREE.Geometry();

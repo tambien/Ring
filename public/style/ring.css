@@ -10,6 +10,15 @@ body {
 /*
  * MAIN
  */
+.titleText {
+	font-family: sans-serif;
+	font-size: 12px;
+}
+.smallText {
+	color: #B3B3B3;
+	font-family: sans-serif;
+	font-size: 10px;
+}
 #container {
 	width: 100%;
 	height: 100%;
@@ -29,7 +38,7 @@ body {
 	top: 0px;
 	left: 0px;
 }
-#emuzelogo{
+#emuzelogo {
 	width: 64px;
 	height: 64px;
 	position: absolute;
@@ -39,29 +48,102 @@ body {
 	left: 50%;
 	z-index: 10000
 }
+#ringTitle {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	z-index: 10000
+}
+/*
+ * LOADING SCREEN
+ */
+#loadingScreen {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	color: white;
+	font-family: sans-serif;
+	font-size: 50px;
+	text-align: center;
+	z-index: 10000000;
+	background-color: black;
+	opacity: 1;
+}
 /*
  * CONTROLS
  */
 #controls {
-	width: 400px;
-	height: 600px;
 	margin: 0px;
 	padding: 0px;
 	position: absolute;
-	left: 30px;
-	top: 80px;
-	opacity: 0.6;
-	background-color: #222;
+	left: 15px;
+	top: 155px;
+	width: 0px;
+	height: 0px;
+	max-width: 380px;
+	max-height: 580px;
+	overflow: hidden;
+	opacity: 0.7;
 	z-index: 10000;
+}
+#revealButton {
+	position: absolute;
+	left: 15px;
+	top: 110px;
+	z-index: 10000;
+	width: 126px;
+	height: 26px;
+	border-left: solid 5px #fff;
+	background-color: #4F2162;
+	text-align: center;
+	padding-top: 6px;
+	cursor: pointer;
+	color: #B3B3B3;
+}
+/*
+ * DATA DISPLAY
+ */
+#controls #dataDisplay {
+	position: relative;
+	height: 65px;
+	border-left: solid 5px #9E41C3;
+	background-color: #222;
+	text-align: left;
+	color: white;
+	padding-left: 10px;
+	padding-top: 10px;
+	text-transform: uppercase;
+}
+#dataDisplay .purpleText {
+	margin-left: 4px;
+	margin-right: 4px;
+	color: #9E41C3;
+}
+#visiblePosts {
+	margin-left: 0px !important;
 }
 /*
  * TAGS
  */
+#tags {
+	position: relative;
+	overflow: auto;
+	margin-top: 15px;
+	padding-bottom: 5px;
+	border-left: solid 5px #9E41C3;
+	background-color: #222;
+}
+#tags #title {
+	padding: 10px;
+	color: white;
+}
 #tagsList {
-	margin-left: 20px;
-	position: absolute;
+	position: relative;
+	margin-bottom: 10px;
 	width: 100%;
-	height: 300px;
+	min-height: 100px;
 }
 .tag {
 	width: 49%;
@@ -79,88 +161,148 @@ body {
 	width: 15px;
 	height: 15px;
 	margin-right: 5px;
+	margin-left: 10px;
 	float: left;
 }
 /*
  * DATE PICKER
  */
+
+.ui-slider-horizontal {
+	height: 2px !important;
+	border: 0px !important;
+	background-color: white;
+}
+.ui-slider-range {
+	/*
+	 height: 2px !important;
+	 border: 0px !important;
+	 background-color: red;
+	 */
+}
+.ui-slider-handle {
+	width: 32px !important;
+	height: 32px !important;
+	margin-top: -11px;
+	background-image: url("../images/Selected_Purple.png") !important;
+	background-color: rgba(1, 1, 1, 0) !important;
+	border: 0px !important;
+}
 .datePicker {
-	width: 100%;
-	height: 100px;
-	position: absolute;
-	top: 310px;
-	left: 0px;
+	position: relative;
+	overflow: auto;
+	margin-top: 15px;
+	padding-bottom: 5px;
+	border-left: solid 5px #9E41C3;
+	background-color: #222;
+	height: 70px;
 }
 
-.datePicker #slider{
+.datePicker #title {
+	padding: 10px;
+	color: white;
+}
+.datePicker #slider {
 	position: absolute;
 	left: 10%;
-	top: 30px;
+	top: 45px;
 	width: 80%;
 }
-.datePicker #title{
+.datePicker .dot {
 	position: absolute;
+	top: 0px;
+	width: 6px;
+	height: 6px;
+	top: -2px;
+	background-color: white;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}
+.datePicker #range {
+	position: absolute;
+	background-color: #9E41C3;
+	height: 2px;
+	top: 0px;
+	z-index: 10000;
+}
+.datePicker .date{
+	position: absolute;
+	top: 16px;
+	left: 0px;
 	color: white;
 	font-family: sans-serif;
-	font-size: 14px;
-	left: 30px;
-	top: 0px;
+	font-size: 9px;
+	text-align: left;
+	margin-left: -3px;
 }
 
 /*
  * REBLOG LEVEL
  */
 .reblogLevel {
-	width: 100%;
-	height: 100px;
-	position: absolute;
-	top: 410px;
-	left: 0px;
+	position: relative;
+	margin-top: 15px;
+	padding-bottom: 5px;
+	border-left: solid 5px #9E41C3;
+	background-color: #222;
+	height: 75px;
 }
-
-.reblogLevel #slider{
-	position: absolute;
-	left: 10%;
-	top: 30px;
-	width: 80%;
-}
-.reblogLevel #title{
-	position: absolute;
+.reblogLevel #title {
+	padding: 10px;
 	color: white;
-	font-family: sans-serif;
-	font-size: 14px;
-	left: 30px;
+}
+.reblogLevel #slider {
+	position: absolute;
+	left: 10%;
+	top: 45px;
+	width: 80%;
+}
+.reblogLevel #range {
+	position: absolute;
+	background-color: #9E41C3;
+	height: 2px;
 	top: 0px;
+	z-index: 10000;
+}
+.reblogLevel .dot {
+	position: absolute;
+	top: 0px;
+	width: 6px;
+	height: 6px;
+	top: -2px;
+	background-color: white;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 }
 
-.reblogLevel #notes{
-	width: 100%;
+.reblogLevel #notes {
 	position: absolute;
-	height: 10px;
-	left: 10%;
-	top: 50px;
-	width: 80%;
+	width: 100%;
+	height: 20px;
+	left: 5%;
+	top: 60px;
+	width: 90%;
 	color: white;
 	font-family: sans-serif;
 	font-size: 8px;
 }
-
-.reblogLevel #notes #primary{
+.reblogLevel #notes #primary {
 	width: 100%;
 	position: absolute;
 	left: 0px;
 	top: 0px;
 	text-align: left;
 }
-.reblogLevel #notes #reblogs{
+.reblogLevel #notes #reblogs {
 	width: 100%;
 	position: absolute;
 	left: 0px;
 	top: 0px;
 	text-align: center;
 }
-
-.reblogLevel #notes #reblogreblogs{
+.reblogLevel #notes #reblogreblogs {
 	width: 100%;
 	position: absolute;
 	left: 0px;
@@ -178,7 +320,6 @@ body {
 	font-family: sans-serif;
 	font-size: 16px;
 }
-
 /*
  * POST
  */
@@ -190,8 +331,7 @@ body {
 	background-color: black;
 	z-index: 10000;
 }
-
-.post #title{
+.post #title {
 	position: absolute;
 	color: white;
 	font-family: sans-serif;
@@ -201,8 +341,7 @@ body {
 	width: 100%;
 	text-align: center;
 }
-
-.post #text{
+.post #text {
 	position: absolute;
 	color: white;
 	font-family: sans-serif;
@@ -212,15 +351,13 @@ body {
 	width: 100%;
 	text-align: center;
 }
-
-.post #photo{
+.post #photo {
 	position: absolute;
 	left: 10px;
 	top: 15px;
 	width: 220px;
 }
-
-.post #notes{
+.post #notes {
 	position: absolute;
 	color: white;
 	font-family: sans-serif;
