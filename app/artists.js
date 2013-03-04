@@ -61,7 +61,7 @@ var twitter = require('./twitter/twitter-db');
 
 	//get top 26
 	function getTopArtists() {
-		return artists.slice(0, 26);
+		return artists.slice(0, 14);
 	};
 
 	//gets the tags from the google doc

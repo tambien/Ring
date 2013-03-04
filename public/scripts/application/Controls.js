@@ -85,6 +85,7 @@ RING.Controls = Backbone.Model.extend({
 		})
 	},
 	render : function() {
+		var delayTime = 600;
 		var artists = this.artists;
 		var endTime = this.get("endTime");
 		var startTime = this.get("startTime");
@@ -102,7 +103,10 @@ RING.Controls = Backbone.Model.extend({
 			}
 			//atempt to speed things up
 			if(!artistMatch) {
-				model.set("visible", false);
+				setTimeout(function(model) {
+					//set it as  notvisible
+					model.set("visible", false);
+				}, RING.Util.randomInt(0, delayTime), model);
 				continue;
 			}
 			//check that it's the right time range
@@ -110,13 +114,17 @@ RING.Controls = Backbone.Model.extend({
 			var timeMatch = (modelTime > startTime && modelTime <= endTime);
 			//atempt to speed things up
 			if(!timeMatch) {
-				model.set("visible", false);
+				setTimeout(function(model) {
+					model.set("visible", false);
+				}, RING.Util.randomInt(0, delayTime), model);
 				continue;
 			}
 			//set it as visible
-			model.set("visible", true);
-			//and all it's reblogs
-			model.makeReblogsVisible(reblogLevel);
+			setTimeout(function(model) {
+				model.set("visible", true);
+				//and all it's reblogs
+				model.makeReblogsVisible(reblogLevel);
+			}, RING.Util.randomInt(0, delayTime), model);
 		};
 		var twitterModels = RING.twitterCollection.models
 		for(var i = 0, len = twitterModels.length; i < len; i++) {
@@ -131,7 +139,10 @@ RING.Controls = Backbone.Model.extend({
 			}
 			//atempt to speed things up
 			if(!artistMatch) {
-				model.set("visible", false);
+				setTimeout(function(model) {
+					//set it as not visible
+					model.set("visible", false);
+				}, RING.Util.randomInt(0, delayTime), model);
 				continue;
 			}
 			//check that it's the right time range
@@ -139,10 +150,16 @@ RING.Controls = Backbone.Model.extend({
 			var timeMatch = (modelTime > startTime && modelTime <= endTime);
 			//atempt to speed things up
 			if(!timeMatch) {
-				model.set("visible", false);
+				setTimeout(function(model) {
+					//set it as not visible
+					model.set("visible", false);
+				}, RING.Util.randomInt(0, delayTime), model);
 				continue;
 			}
-			model.set("visible", true);
+			setTimeout(function(model) {
+				//set it as visible
+				model.set("visible", true);
+			}, RING.Util.randomInt(0, delayTime), model);
 		};
 
 	},
