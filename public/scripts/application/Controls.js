@@ -44,8 +44,8 @@ RING.Controls = Backbone.Model.extend({
 			model : this,
 		});
 		//make the emuze link
-		$("#visitEmuze").click(function(){
-			window.open("http://www.emuze.com",'_blank');
+		$("#visitEmuze").click(function() {
+			window.open("http://www.emuze.com", '_blank');
 		});
 	},
 	updateArtists : function(model, checked) {
@@ -192,7 +192,10 @@ RING.Controls.View = Backbone.View.extend({
 				this.$reblogLevel.html("<span class='titleText'>DISPLAYING:</span><span class='titleText purpleText'>PRIMARY POSTS</span><span class='titleText'>AND</span><span class='titleText purpleText'>REBLOGS OF REBLOGS</span>");
 				break;
 		}
-		var visiblePosts = this.model.get("visiblePosts");
+		var visiblePosts = 0;
+		if(RING.tumblrCollection && RING.twitterCollection) {
+			visiblePosts = RING.tumblrCollection.length + RING.twitterCollection.length;
+		}
 		this.$visiblePosts.html(visiblePosts);
 
 		this.$dateRange.html(startText + " TO " + endText);
@@ -232,10 +235,11 @@ RING.Controls.View = Backbone.View.extend({
 			}, time, function() {
 				$(this).transition({
 					height : "0px"
-				}, time);
+				}, time, function() {
+					//reopen the emuze visit button
+					$("#visitEmuze").show(time / 2)
+				});
 			});
-			//reopen the emuze visit button
-			$("#visitEmuze").show(time / 2);
 			this.$revealButton.find("span").html("SHOW OPTIONS")
 		}
 	},

@@ -49,8 +49,6 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		//get the tumblr posts from the database
 		var reqString = window.location + "get?type=tumblr";
 		var self = this;
-		RING.loaded();
-		/*
 		$.ajax(reqString, {
 			success : function(response) {
 				self.update(response);
@@ -63,6 +61,5 @@ RING.TumblrCollection = Backbone.Collection.extend({
 				console.error("could not fetch that data");
 			}
 		})
-		*/
 	}
 });
