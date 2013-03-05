@@ -22,8 +22,7 @@ RING.Tumblr = RING.Post.extend({
 		//the first point is the center of the circle
 		this.systemNodes = [new THREE.Vector3(this.get("x"), this.get('y'), 0)];
 		//listen for changes and move all of the lines
-		this.on("change:x", this.moveLine);
-		this.on("change:y", this.moveLine);
+		this.on("change:theta", this.moveLine);
 		//this.listenTo(RING.controls, "change:reblogLevel", this.changeReblogLevel);
 	},
 	//called when all of the posts are loaded in the collection
@@ -38,6 +37,12 @@ RING.Tumblr = RING.Post.extend({
 		//listen for changes in visibility
 		if(this.origin) {
 			this.listenTo(this.origin, "change:visible", this.originVisibility);
+		} else {
+			//move the reblogs when the origin is moved
+			this.on("change:theta", this.repositionReblogs);
+			//move the origin when the time changes
+			this.listenTo(RING.controls, "change:startTime", this.getPositionFromTime);
+			this.listenTo(RING.controls, "change:endTime", this.getPositionFromTime);
 		}
 	},
 	originVisibility : function(model, visible) {
@@ -88,7 +93,7 @@ RING.Tumblr = RING.Post.extend({
 		this.makeSystemNodes();
 		var x = this.get('x');
 		var y = this.get('y');
-		var theta = this.theta;
+		var theta = this.get("theta");
 		for(var i = 0, len = this.reblogs.length; i < len; i++) {
 			var reblog = this.reblogs[i];
 			var angle = theta + RING.Util.randomFloat(-1, 1);
@@ -103,11 +108,50 @@ RING.Tumblr = RING.Post.extend({
 			reblog.positionReblogs();
 		}
 	},
+	repositionReblogs : function() {
+		//this.moveLine();
+		var x = this.get('x');
+		var y = this.get('y');
+		var theta = this.get("theta");
+		var diff = this.previous("theta") - theta;
+		for(var i = 0, len = this.reblogs.length; i < len; i++) {
+			var reblog = this.reblogs[i];
+			var angle = reblog.get("theta") + diff;
+			var radius = reblog.get('radius');
+			reblog.set({
+				x : radius * Math.cos(angle),
+				y : radius * Math.sin(angle),
+			});
+			reblog.repositionReblogs();
+		}
+	},
 	moveLine : function() {
 		var x = this.get("x");
 		var y = this.get("y");
 		this.systemNodes[0].x = x;
 		this.systemNodes[0].y = y;
+		//the new angle difference
+		var diff = this.previous("theta") - this.get("theta");
+		//move all of the system nodes by that angle
+		for(var i = 1; i < this.systemNodes.length; i++) {
+			var node = this.systemNodes[i];
+			var x = node.x;
+			var y = node.y;
+			//convert these to polar
+			var theta = Math.atan2(y, x);
+			var radius = Math.sqrt(x * x + y * y);
+			//rotate them
+			theta += diff;
+			x = radius * Math.cos(theta);
+			y = radius * Math.sin(theta);
+			//convert back to cartesian
+			node.setX(x);
+			node.setY(y);
+		}
+		//move the vertices
+		if(this.view.line) {
+			this.view.line.geometry.verticesNeedUpdate = true;
+		}
 	},
 	makeReblogsVisible : function(level) {
 		_.forEach(this.reblogs, function(reblog, index) {
@@ -151,19 +195,6 @@ RING.Tumblr = RING.Post.extend({
 			y = newY;
 		}
 	},
-	positionFromSystemNode : function() {
-		if(this.origin) {
-			//pick a random system node index
-			this.systemNodeIndex = RING.Util.randomInt(0, this.origin.systemNodes.length);
-			//get that position
-			//var position = this.origin.systemNodes[this.systemNodeIndex];
-			var position = this.origin.view.lineCenter;
-			//angle it outward from the origin
-			var angle = this.origin.theta;
-			//position the node some random angle from this one
-
-		}
-	}
 });
 
 //cache the line material
@@ -178,21 +209,11 @@ RING.Tumblr.View = RING.Post.View.extend({
 
 	initialize : function() {
 		this.superInit();
-		this.listenTo(this.model, "change:x", this.moveLine);
-		this.listenTo(this.model, "change:y", this.moveLine);
 		this.listenTo(this.model, "change:visible", this.lineVisible);
-		this.lineCenter = new THREE.Vector3(this.model.get("x"), this.model.get("y"), 0);
+		this.listenTo(this.model, "change:theta", this.updateLines);
 	},
-	moveLine : function(model, x) {
-		//find the difference of previous position
+	updateLines : function() {
 
-		//apply that difference to every node in the systemNodes
-
-		//and reangle it accordingly! that's kind of expensive!
-		var x = model.get("x");
-		var y = model.get("y");
-		this.lineCenter.x = x
-		this.lineCenter.y = y;
 	},
 	lineVisible : function(model, visible) {
 		if(this.line) {

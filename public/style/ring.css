@@ -28,6 +28,7 @@ body {
 	top: 0px;
 	left: 0px;
 	background-color: black;
+	overflow: hidden;
 }
 #canvas {
 	width: 100%;
@@ -71,7 +72,7 @@ body {
 #loadingScreen #introducing {
 	position: absolute;
 	width: 380px;
-	height: 260px;
+	height: 270px;
 	border-left: solid 5px #9E41C3;
 	background-color: #222;
 	text-align: left;
@@ -88,7 +89,7 @@ body {
 #loadingScreen #loadingBar {
 	position: absolute;
 	left: 15px;
-	top: 410px;
+	top: 420px;
 	z-index: 98;
 	width: 250px;
 	height: 26px;
@@ -203,6 +204,7 @@ body {
 	padding-bottom: 5px;
 	border-left: solid 5px #9E41C3;
 	background-color: #222;
+	cursor: pointer;
 }
 #tags #title {
 	padding: 10px;

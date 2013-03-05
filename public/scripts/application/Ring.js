@@ -19,7 +19,7 @@ var RING = function() {
 		$container = $("#container");
 		//setup the rendering context
 		setupTHREE();
-		addOctagon();
+		//addOctagon();
 		setupStats();
 		//bind the basic events
 		bindEvents();
@@ -115,6 +115,9 @@ var RING = function() {
 
 	function mouseClicked(event) {
 		event.preventDefault();
+		if (event.which==2||event.which==3){
+			return false;
+		}
 		//remove any other post displays
 		$(".post").remove();
 		//find the new object
@@ -126,14 +129,15 @@ var RING = function() {
 		var ray = new THREE.Ray(RING.camera.position, dir);
 		var distance = -RING.camera.position.z / dir.z;
 		var pos = RING.camera.position.clone().add(dir.multiplyScalar(distance));
-		var width = 25;
+		var width = 1;
 		var res = rtree.search({
 			x : pos.x - width,
 			y : pos.y - width,
 			w : width * 2,
 			h : width * 2,
 		})
-		//get the post which is closest to the center of the mouse
+		//get the post which is closest to the center of the mouse and has the highest z axis
+		//go throgh and get only the points that are on top
 		var closest;
 		var closestDist = 10000;
 		for(var i = 0; i < res.length; i++) {
@@ -148,11 +152,11 @@ var RING = function() {
 		if(closest) {
 			//check that it was actually within the element
 			var box = closest.boundingBox;
-			var inX = pos.x > box.x && pos.x < box.x + box.w;
-			var inY = pos.y > box.y && pos.y < box.y + box.h;
+			var inX = pos.x > box.x && pos.x < box.x + box.w*10;
+			var inY = pos.y > box.y && pos.y < box.y + box.h*10;
 			closest.clicked(mouseX, mouseY);
 			if(inX && inY) {
-				
+				console.log("exact click");
 			}
 		}
 	}
@@ -169,6 +173,8 @@ var RING = function() {
 			stats.update();
 		}
 		RING.renderer.render(RING.scene, RING.camera);
+		//update the tweet
+		 TWEEN.update();
 		//update tumblr collection
 		//RING.tumblrCollection.render();
 	}

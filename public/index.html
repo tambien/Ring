@@ -11,6 +11,7 @@
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/underscore.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/backbone.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/jquery-ui-1.10.1.custom.js"></script>
+	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/jquery.ui.touch-punch.min.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/stats.min.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/rtree.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/RequestAnimationFrame.js"></script>
@@ -30,43 +31,42 @@
 </head>
 <body>
 	<script type="x-shader/x-vertex" id="vertexshader">
-		attribute float size;
-		attribute vec3 ca;
-		attribute float rotation;
 
-		varying vec3 vColor;
-		varying float vRotation;
+			attribute float size;
+			attribute vec3 ca;
 
-		void main() {
+			varying vec3 vColor;
 
-		vColor = ca;
-		vRotation = rotation;
+			void main() {
 
-		vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				vColor = ca;
 
-		gl_PointSize = size * ( 1000.0 / length( mvPosition.xyz ) );
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
-		gl_Position = projectionMatrix * mvPosition;
+				//gl_PointSize = size;
+				gl_PointSize = size * ( 1000.0 / length( mvPosition.xyz ) );
 
-		}
-	</script>
-	<script type="x-shader/x-fragment" id="fragmentshader">
-		uniform vec3 color;
-		uniform sampler2D texture;
+				gl_Position = projectionMatrix * mvPosition;
 
-		varying vec3 vColor;
-		varying float vRotation;
+			}
 
-		void main() {
+		</script>
 
-		float mid = 0.5;
-		vec2 rotated = vec2(cos(vRotation) * (gl_PointCoord.x - mid) + sin(vRotation) * (gl_PointCoord.y - mid) + mid,
-		cos(vRotation) * (gl_PointCoord.y - mid) - sin(vRotation) * (gl_PointCoord.x - mid) + mid);
-		vec4 rotatedTexture = texture2D( texture,  rotated);
-		gl_FragColor = vec4( color * vColor, 1.0 ) * rotatedTexture;
+		<script type="x-shader/x-fragment" id="fragmentshader">
 
-		}
-	</script>
+			uniform vec3 color;
+			uniform sampler2D texture;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				gl_FragColor = vec4( color * vColor, 1.0 );
+				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+
+			}
+
+		</script>
 	<img id="ringTitle" src="images/Ring_Title.png">
 	<div id="loadingScreen">
 		<div id="introducing">

@@ -30,7 +30,7 @@ RING.Artist.View = Backbone.View.extend({
 	className : "tag",
 
 	events : {
-		"click .checkbox" : "check",
+		"click" : "check",
 	},
 
 	initialize : function() {

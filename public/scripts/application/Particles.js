@@ -39,6 +39,7 @@ RING.Particles = function() {
 
 	function initSystemWithTexture(system, attributes, uniforms, image) {
 		attributes = {
+
 			size : {
 				type : 'f',
 				value : []
@@ -46,13 +47,11 @@ RING.Particles = function() {
 			ca : {
 				type : 'c',
 				value : []
-			},
-			rotation : {
-				type : 'f',
-				value : []
 			}
+
 		};
 		uniforms = {
+
 			amplitude : {
 				type : "f",
 				value : 1.0
@@ -63,14 +62,12 @@ RING.Particles = function() {
 			},
 			texture : {
 				type : "t",
-				value : THREE.ImageUtils.loadTexture(image),
+				value : THREE.ImageUtils.loadTexture(image)
 			},
+
 		};
-		uniforms.texture.value.offset.x = .5;
-		uniforms.texture.value.offset.y = .5;
-		uniforms.texture.value.wrapS = uniforms.texture.value.wrapT = THREE.ClampToEdgeWrapping;
-		uniforms.texture.value.magFilter = THREE.NearestFilter;
-		uniforms.texture.value.minFilter = THREE.LinearMipMapLinearFilter;
+
+		uniforms.texture.value.wrapS = uniforms.texture.value.wrapT = THREE.RepeatWrapping;
 
 		var shaderMaterial = new THREE.ShaderMaterial({
 
@@ -105,12 +102,10 @@ RING.Particles = function() {
 		var vertices = system.geometry.vertices;
 		var values_size = attributes.size.value;
 		var values_color = attributes.ca.value;
-		var values_rotation = attributes.rotation.value;
 
 		for(var v = 0; v < vertices.length; v++) {
 			values_size[v] = 1;
 			values_color[v] = new THREE.Color(0xffffff);
-			values_rotation[v] = RING.Util.choose([0]);
 		}
 
 		RING.scene.add(system);
@@ -232,9 +227,17 @@ RING.Particles = function() {
 			default:
 				return;
 		}
-		system.geometry.vertices[index].x = x;
-		system.geometry.vertices[index].y = y;
-		system.geometry.verticesNeedUpdate = true;
+		var tween = new TWEEN.Tween({
+			x : system.geometry.vertices[index].x,
+			y : system.geometry.vertices[index].y,
+		}).to({
+			x : x,
+			y : y,
+		}, 500).onUpdate(function() {
+			system.geometry.vertices[index].x = this.x;
+			system.geometry.vertices[index].y = this.y;
+			system.geometry.verticesNeedUpdate = true;
+		}).start();
 	}
 
 	function makeInvisible(model) {

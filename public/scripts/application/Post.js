@@ -16,6 +16,8 @@ RING.Post = Backbone.Model.extend({
 		//position and size
 		"x" : 0,
 		"y" : 0,
+		"radius" : 0,
+		"theta" : 0,
 		"size" : 0,
 		//displaying
 		"visible" : false,
@@ -26,11 +28,15 @@ RING.Post = Backbone.Model.extend({
 	},
 
 	superInit : function(attributes, options) {
+		//movement/position
 		this.on("change:x", this.moved);
 		this.on("change:y", this.moved);
+		//set the radius initially
+		this.set("radius", RING.Util.randomFloat(350, 420));
+
+		//visibility
 		this.on("change:visible", this.changeVisible);
-		//this.listenTo(RING.controls, "change:startTime", this.getPositionFromTime);
-		//this.listenTo(RING.controls, "change:endTime", this.getPositionFromTime);
+
 		//calculate the position
 		this.getSizeFromNoteCount();
 		this.setBoundingBox();
@@ -62,7 +68,6 @@ RING.Post = Backbone.Model.extend({
 	},
 	updateRTreePosition : function() {
 		if(this.get('visible')) {
-			console.log('here')
 			if(this.boundingBox) {
 				//remove the previous object from the rtree
 				RING.rtree.remove(this.boundingBox, this);
@@ -71,69 +76,28 @@ RING.Post = Backbone.Model.extend({
 			RING.rtree.insert(this.boundingBox, this);
 		}
 	},
-	//set initial position
-	setInitialPosition : function() {
+	//sets the x and y based on the time + a little randomness
+	getPositionFromTime : function() {
+		//if(this.get("visible")) {
 		//the 360 degrees is from the startTime to the endTime
 		var startTime = RING.controls.get("startTime");
 		var endTime = RING.controls.get("endTime");
-		var timestamp = new Date(this.get("timestamp"));
+		var timestamp = new Date(this.get("timestamp")) - 0;
 		//the timeline length
 		var duration = endTime - startTime;
-		var position = (endTime - timestamp) / duration;
 
-		var angle = position * Math.PI * 2;
-
-		this.theta = angle;
-
-		var randomRadius = RING.Util.randomFloat(350, 420);
-
-		this.set({
-			x : randomRadius * Math.cos(angle),
-			y : randomRadius * Math.sin(angle),
-		});
-	},
-	//sets the x and y based on the time + a little randomness
-	/*
-	getPositionFromTime : function() {
-	if(this.get("visible")) {
-	//the 360 degrees is from the startTime to the endTime
-	var startTime = RING.controls.get("startTime");
-	var endTime = RING.controls.get("endTime");
-	var timestamp = new Date(this.get("timestamp"));
-	//the timeline length
-	var duration = endTime - startTime;
-	var position = (endTime - timestamp) / duration;
-
-	var angle = position * Math.PI * 2;
-
-	this.theta = angle;
-
-	var randomRadius = RING.Util.randomFloat(350, 420);
-
-	this.set({
-	x : randomRadius * Math.cos(angle),
-	y : randomRadius * Math.sin(angle),
-	});
-	}
-	},
-	*/
-	//sets the x and y based on the time + a little randomness
-	getPositionFromTime : function() {
-		//the 360 degrees is from the startTime to the endTime
-		var startTime = RING.controls.get("startTime");
-		var endTime = RING.controls.get("endTimeTime");
-		//var position =
-
-		var timestamp = this.get("timestamp");
-		var date = new Date(timestamp);
-		var hoursAngle = Math.PI * 2 * (date.getHours() / 24);
-		var minutesAngle = (Math.PI / 12) * (date.getMinutes() / 60);
-		var timeAngle = hoursAngle + minutesAngle;
-		var randomRadius = RING.Util.randomFloat(350, 420);
-		this.set({
-			x : randomRadius * Math.cos(timeAngle),
-			y : randomRadius * Math.sin(timeAngle),
-		});
+		if(duration > 0) {
+			var position = (timestamp - startTime) / duration;
+			var angle = position * Math.PI * 2 + Math.PI / 2;
+			this.theta = angle;
+			this.set("theta", angle);
+			var radius = this.get("radius");
+			this.set({
+				x : radius * Math.cos(angle),
+				y : radius * Math.sin(angle),
+			});
+		}
+		//}
 	},
 	getSizeFromNoteCount : function() {
 		var count = this.get("note_count") + 1;
@@ -151,6 +115,8 @@ RING.Post = Backbone.Model.extend({
 	},
 	setTheta : function(x, y) {
 		this.theta = Math.atan2(y, x);
+		this.set("theta", this.theta);
+		this.set("radius", Math.sqrt(x*x + y*y));
 	},
 	changeVisible : function(model, visible) {
 		if(visible) {
@@ -180,8 +146,8 @@ RING.Post.View = Backbone.View.extend({
 
 	superInit : function() {
 		//trigger callbacks on repositioning
-		this.listenTo(this.model, "change:x", this.position);
-		this.listenTo(this.model, "change:y", this.position);
+		this.listenTo(this.model, "change:x", _.throttle(this.position, 500));
+		this.listenTo(this.model, "change:y", _.throttle(this.position, 500));
 		this.listenTo(this.model, "change:color", this.setColor);
 		this.listenTo(this.model, "change:size", this.setSize);
 		this.listenTo(this.model, "change:visible", this.setVisible);
@@ -196,7 +162,7 @@ RING.Post.View = Backbone.View.extend({
 	},
 	position : function(model) {
 		if(model.get('visible')) {
-			RING.Particles.updatePosition(model);
+			RING.Particles.position(model, model.get("x"), model.get("y"));
 		}
 	},
 	setSize : function(model, size) {

@@ -7,15 +7,17 @@ RING.Twitter = RING.Post.extend({
 
 	initialize : function(attributes, options) {
 		this.superInit(attributes, options);
-		this.set("style",  'octagon')
-		
+		this.set("style", 'octagon')
+
 		//add the handle as well
-		
+
 		this.view = new RING.Twitter.View({
 			model : this,
-		})
+		});
+		this.listenTo(RING.controls, "change:startTime", this.getPositionFromTime);
+		this.listenTo(RING.controls, "change:endTime", this.getPositionFromTime);
 	},
-	allLoaded : function(){
+	allLoaded : function() {
 		this.superLoaded();
 	}
 });

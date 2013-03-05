@@ -107,7 +107,7 @@ var artists = require('./artists');
 			twitter : [],
 		}
 		var timeTo = new Date();
-		var timeFrom = new Date(timeTo.getFullYear(), timeTo.getMonth(), parseInt(timeTo.getDate()) - 7);
+		var timeFrom = new Date(timeTo.getFullYear(), timeTo.getMonth(), parseInt(timeTo.getDate()) - 4);
 		async.parallel([
 		function(tumblrGetCallback) {
 			tumblrDB.getArtistBetweenTime(artist.name, timeFrom, timeTo, function(posts) {

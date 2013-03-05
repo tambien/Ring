@@ -33,7 +33,9 @@ RING.Controls = Backbone.Model.extend({
 		//listen for changes to the tags
 		this.listenTo(this.artistList, "change:checked", this.updateArtists);
 		//update the canvas whenver there is a change
-		this.on("change", _.throttle(this.render, 600));
+		this.on("change:startTime", _.throttle(this.render, 300));
+		this.on("change:endTime", _.throttle(this.render, 300));
+		this.on("change:reblogLevel", _.throttle(this.render, 300));
 		//make the views
 		this.view = new RING.Controls.View({
 			model : this,
@@ -92,7 +94,7 @@ RING.Controls = Backbone.Model.extend({
 		})
 	},
 	render : function() {
-		var delayTime = 600;
+		var delayTime = 100;
 		var artists = this.artists;
 		var endTime = this.get("endTime");
 		var startTime = this.get("startTime");
@@ -267,7 +269,7 @@ RING.Controls.View = Backbone.View.extend({
 		this.$visiblePosts = $("#visiblePosts");
 		//this.$dateRange = $().appendTo(this.$dataDisplay);
 		//listen for changes
-		this.listenTo(this.model, "change", this.render);
+		this.listenTo(this.model, "change", _.throttle(this.render, 100));
 		this.listenTo(this.model, "change:expanded", this.expand);
 		this.render(this.model);
 		//make the emuze link for web version only
@@ -392,8 +394,8 @@ RING.DatePicker = Backbone.View.extend({
 		this.listenTo(this.model, "change:endTime", this.render);
 		this.$dots = []
 		//make the dots
-		for(var i = 0; i <= 6; i++) {
-			var left = (100 / 6) * i;
+		for(var i = 0; i <= 4; i++) {
+			var left = (100 / 4) * i;
 			var dot = $("<div class='dot'></div>").appendTo(this.$slider);
 			dot.css({
 				left : left + "%",
@@ -402,8 +404,8 @@ RING.DatePicker = Backbone.View.extend({
 		}
 		//make the dates
 		this.$dates = [];
-		for(var i = 0; i <= 7; i++) {
-			var left = (100 / 6) * i;
+		for(var i = 0; i <= 4; i++) {
+			var left = (100 / 4) * i;
 			var dot = $("<div class='date'>0</div>").appendTo(this.$slider);
 			dot.css({
 				left : left + "%",
@@ -421,7 +423,7 @@ RING.DatePicker = Backbone.View.extend({
 		var max = Math.ceil((endTime - now) / dayInMS);
 		this.$slider.slider({
 			range : true,
-			min : -6,
+			min : -4,
 			max : 0,
 			values : [min, max],
 		});
@@ -451,7 +453,7 @@ RING.DatePicker = Backbone.View.extend({
 		}
 		for(var i = 0; i < this.$dates.length; i++) {
 			var dot = this.$dates[i];
-			var date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (i - 6));
+			var date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (i - 4));
 			var monthNum = date.getMonth() + 1;
 			var day = date.getDate();
 			dot.html(monthNum + "/" + day);
@@ -571,6 +573,8 @@ RING.Search = Backbone.View.extend({
 	searchArtist : function() {
 		//get the artist from the search box
 		var artistName = this.$search.val();
+		//clear the value
+		this.$search.val("");
 		//if the artist is already in the list, check it
 		var found = this.model.artistList.where({
 			name : artistName,
