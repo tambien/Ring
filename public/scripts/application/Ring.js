@@ -17,6 +17,7 @@ var RING = function() {
 
 	function initialize() {
 		$container = $("#container");
+		RING.$container = $container;
 		//setup the rendering context
 		setupTHREE();
 		//addOctagon();
@@ -29,6 +30,8 @@ var RING = function() {
 		RING.Particles.initialize();
 		//make the controls
 		RING.controls = new RING.Controls();
+		//make the attract mode
+		RING.attractMode = new RING.AttractMode();
 		//start it off
 		render();
 	}

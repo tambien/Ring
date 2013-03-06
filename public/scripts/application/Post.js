@@ -161,7 +161,7 @@ RING.Post = Backbone.Model.extend({
 		this.view.createElement();
 		this.view.$el.appendTo($("#container"));
 		this.view.positionElement(x, y);
-		console.log(this);
+		//console.log(this);
 	}
 });
 
