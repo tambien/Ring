@@ -7,6 +7,7 @@ RING.Twitter = RING.Post.extend({
 
 	initialize : function(attributes, options) {
 		this.superInit(attributes, options);
+		
 		this.set("style", 'octagon')
 
 		//add the handle as well

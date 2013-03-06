@@ -29,8 +29,8 @@ RING.Post = Backbone.Model.extend({
 
 	superInit : function(attributes, options) {
 		//movement/position
-		this.on("change:x", this.moved);
-		this.on("change:y", this.moved);
+		this.on("change:x", _.throttle(this.moved, 500));
+		this.on("change:y", _.throttle(this.moved, 500));
 		//set the radius initially
 		this.set("radius", RING.Util.randomFloat(350, 420));
 
@@ -95,6 +95,7 @@ RING.Post = Backbone.Model.extend({
 			this.set({
 				x : radius * Math.cos(angle),
 				y : radius * Math.sin(angle),
+				theta : angle,
 			});
 		}
 		//}
@@ -107,16 +108,16 @@ RING.Post = Backbone.Model.extend({
 	},
 	moved : function() {
 		//it woul be cool to do a tween here
-		var x = this.get("x");
-		var y = this.get("y");
-		this.setTheta(x, y);
+		//var x = this.get("x");
+		//var y = this.get("y");
+		//this.setTheta(x, y);
 		//update the rtree position
 		this.updateRTreePosition();
 	},
 	setTheta : function(x, y) {
 		this.theta = Math.atan2(y, x);
 		this.set("theta", this.theta);
-		this.set("radius", Math.sqrt(x*x + y*y));
+		this.set("radius", Math.sqrt(x * x + y * y));
 	},
 	changeVisible : function(model, visible) {
 		if(visible) {
@@ -137,6 +138,7 @@ RING.Post = Backbone.Model.extend({
 		this.view.createElement();
 		this.view.$el.appendTo($("#container"));
 		this.view.positionElement(x, y);
+		console.log(this);
 	}
 });
 
@@ -186,7 +188,7 @@ RING.Post.View = Backbone.View.extend({
 				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") + 1, {
 					silent : false,
 				})
-				self.position(model);
+				self.position(model, model.get("x"), model.get("y"));
 			} else {
 				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") - 1, {
 					silent : false,

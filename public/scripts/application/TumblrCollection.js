@@ -35,11 +35,7 @@ RING.TumblrCollection = Backbone.Collection.extend({
 			model.allLoaded();
 		});
 		this.forEach(function(model, index) {
-			if(model.get("reblogged_from") === null) {
-				model.positionReblogs();
-			} else {
-				model.view.drawEdgeToOrigin();
-			}
+			model.allLoaded2();
 		});
 		this.primary = this.filter(function(model) {
 			return model.get('reblogged_from') === null;
@@ -79,11 +75,7 @@ RING.TumblrCollection = Backbone.Collection.extend({
 			model.allLoaded();
 		});
 		_.forEach(artistPosts, function(model) {
-			if(model.get("reblogged_from") === null) {
-				model.positionReblogs();
-			} else {
-				model.view.drawEdgeToOrigin();
-			}
+			model.allLoaded2();
 		});
 		//refilter the primary posts
 		this.primary = this.filter(function(model) {
