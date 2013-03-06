@@ -32,13 +32,13 @@ var RING = function() {
 		//start it off
 		render();
 	}
-	
+
 	//a loaded counter which will remove the loading indicator
 	var loadCounter = 0;
-	function loaded(){
+	function loaded() {
 		loadCounter++;
-		if (loadCounter === 2){
-			$("#loadingScreen").fadeTo(500, 0, function(){
+		if(loadCounter === 2) {
+			$("#loadingScreen").fadeTo(500, 0, function() {
 				$(this).css({
 					"z-index" : -100,
 				})
@@ -74,9 +74,9 @@ var RING = function() {
 		RING.camera.updateProjectionMatrix();
 		RING.renderer.setSize(RING.width, RING.height);
 	}
-	
+
 	//makes the octagon in the center
-	function addOctagon(){
+	function addOctagon() {
 		var octogonGeometry = new THREE.CircleGeometry(400, 8);
 		var octogon = new THREE.Mesh(octogonGeometry, new THREE.MeshBasicMaterial({
 			color : 0x111111,
@@ -115,7 +115,7 @@ var RING = function() {
 
 	function mouseClicked(event) {
 		event.preventDefault();
-		if (event.which==2||event.which==3){
+		if(event.which == 2 || event.which == 3) {
 			return false;
 		}
 		//remove any other post displays
@@ -152,8 +152,8 @@ var RING = function() {
 		if(closest) {
 			//check that it was actually within the element
 			var box = closest.boundingBox;
-			var inX = pos.x > box.x && pos.x < box.x + box.w*10;
-			var inY = pos.y > box.y && pos.y < box.y + box.h*10;
+			var inX = pos.x > box.x && pos.x < box.x + box.w * 10;
+			var inY = pos.y > box.y && pos.y < box.y + box.h * 10;
 			closest.clicked(mouseX, mouseY);
 			if(inX && inY) {
 				console.log("exact click");
@@ -172,11 +172,13 @@ var RING = function() {
 		if(RING.dev) {
 			stats.update();
 		}
-		RING.renderer.render(RING.scene, RING.camera);
-		//update the tweet
-		 TWEEN.update();
-		//update tumblr collection
-		//RING.tumblrCollection.render();
+		if(!RING.pause) {
+			RING.renderer.render(RING.scene, RING.camera);
+			//update the tweet
+			TWEEN.update();
+			//update tumblr collection
+			//RING.tumblrCollection.render();
+		}
 	}
 
 	//API//////////////////////////////////////////////////////////////////////
@@ -185,7 +187,8 @@ var RING = function() {
 		initialize : initialize,
 		start : start,
 		rtree : rtree,
-		loaded: loaded,
+		loaded : loaded,
+		pause : false,
 	};
 
 }();

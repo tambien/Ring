@@ -36,16 +36,16 @@ RING.Post = Backbone.Model.extend({
 
 		//visibility
 		this.on("change:visible", this.changeVisible);
-
 		//calculate the position
 		this.getSizeFromNoteCount();
 		this.setBoundingBox();
+		//this.getPositionFromTime();
 		//the cid
 		this.cid = this.get("id");
 	},
 	//called when all of the posts are loaded in the collection
 	superLoaded : function() {
-		this.getPositionFromTime();
+		this.getInitialPosition();
 	},
 	//called when a model is removed from the collection
 	remove : function() {
@@ -76,9 +76,7 @@ RING.Post = Backbone.Model.extend({
 			RING.rtree.insert(this.boundingBox, this);
 		}
 	},
-	//sets the x and y based on the time + a little randomness
-	getPositionFromTime : function() {
-		//if(this.get("visible")) {
+	getInitialPosition : function() {
 		//the 360 degrees is from the startTime to the endTime
 		var startTime = RING.controls.get("startTime");
 		var endTime = RING.controls.get("endTime");
@@ -98,7 +96,30 @@ RING.Post = Backbone.Model.extend({
 				theta : angle,
 			});
 		}
-		//}
+	},
+	//sets the x and y based on the time + a little randomness
+	getPositionFromTime : function() {
+		if(this.get("visible")) {
+			//the 360 degrees is from the startTime to the endTime
+			var startTime = RING.controls.get("startTime");
+			var endTime = RING.controls.get("endTime");
+			var timestamp = new Date(this.get("timestamp")) - 0;
+			//the timeline length
+			var duration = endTime - startTime;
+
+			if(duration > 0) {
+				var position = (timestamp - startTime) / duration;
+				var angle = position * Math.PI * 2 + Math.PI / 2;
+				this.theta = angle;
+				this.set("theta", angle);
+				var radius = this.get("radius");
+				this.set({
+					x : radius * Math.cos(angle),
+					y : radius * Math.sin(angle),
+					theta : angle,
+				});
+			}
+		}
 	},
 	getSizeFromNoteCount : function() {
 		var count = this.get("note_count") + 1;
@@ -121,6 +142,8 @@ RING.Post = Backbone.Model.extend({
 	},
 	changeVisible : function(model, visible) {
 		if(visible) {
+			//move it to the correct spot
+			//this.getPositionFromTime();
 			//add it to the rtree
 			this.setBoundingBox();
 			RING.rtree.insert(this.boundingBox, this);
@@ -178,7 +201,7 @@ RING.Post.View = Backbone.View.extend({
 	},
 	remove : function() {
 		//remove all of the objects that were added to the scene
-		RING.scene.remove(this.object);
+		//RING.scene.remove(this.object);
 	},
 	setVisible : function(model, visible) {
 		var self = this;
@@ -188,12 +211,13 @@ RING.Post.View = Backbone.View.extend({
 				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") + 1, {
 					silent : false,
 				})
+				RING.Particles.positionInstant(model, model.get("x") > 0 ? 1000 : -1000,  model.get("y") > 0 ? 1000 : -1000);
 				self.position(model, model.get("x"), model.get("y"));
 			} else {
 				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") - 1, {
 					silent : false,
 				})
-				RING.Particles.position(model, -1000, -1000);
+				RING.Particles.position(model, model.get("x") > 0 ? 1000 : -1000,  model.get("y") > 0 ? 1000 : -1000);
 			}
 		}, RING.Util.randomInt(0, 600), model);
 	},

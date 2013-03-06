@@ -227,17 +227,44 @@ RING.Particles = function() {
 			default:
 				return;
 		}
+		var easing = model.get("reblog_level") > 0 ? TWEEN.Easing.Elastic.Out : TWEEN.Easing.Linear.None;
 		var tween = new TWEEN.Tween({
 			x : system.geometry.vertices[index].x,
 			y : system.geometry.vertices[index].y,
 		}).to({
 			x : x,
 			y : y,
-		}, 500).onUpdate(function() {
+		}, RING.Util.randomInt(500, 800)).easing(easing).onUpdate(function() {
 			system.geometry.vertices[index].x = this.x;
 			system.geometry.vertices[index].y = this.y;
 			system.geometry.verticesNeedUpdate = true;
 		}).start();
+		//.easing( TWEEN.Easing.Elastic.InOut )
+	}
+
+	//like position particle, but without the tween
+	function positionInstant(model, x, y) {
+		var index = model.get("particleIndex");
+		var system;
+		//get an object from the array depending on the type of the object
+		switch(model.get("style")) {
+			case 'circle':
+				attributes = circleAttributes;
+				system = circleSystem;
+				break;
+			case 'circle_grad':
+				attributes = circleGradAttributes;
+				system = circleGradSystem;
+				break;
+			case 'octagon':
+				attributes = octaAttributes;
+				system = octaSystem;
+				break;
+			default:
+				return;
+		}
+		system.geometry.vertices[index].x = x;
+		system.geometry.vertices[index].y = y;
 	}
 
 	function makeInvisible(model) {
@@ -322,5 +349,6 @@ RING.Particles = function() {
 		updatePosition : updatePosition,
 		position : positionParticle,
 		makeInvisible : makeInvisible,
+		positionInstant : positionInstant,
 	}
 }();

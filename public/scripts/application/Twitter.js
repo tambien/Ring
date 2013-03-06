@@ -17,6 +17,7 @@ RING.Twitter = RING.Post.extend({
 		});
 		this.listenTo(RING.controls, "change:startTime", this.getPositionFromTime);
 		this.listenTo(RING.controls, "change:endTime", this.getPositionFromTime);
+		this.on("change:visible", this.getPositionFromTime);
 	},
 	allLoaded : function() {
 		this.superLoaded();

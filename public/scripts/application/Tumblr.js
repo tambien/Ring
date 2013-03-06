@@ -26,7 +26,7 @@ RING.Tumblr = RING.Post.extend({
 	//called when all of the posts are loaded in the collection
 	allLoaded : function() {
 		this.superLoaded();
-		//listen to the reblogged_from post to set the visibility
+
 		this.origin = this.collection.get(this.get("reblogged_from"));
 		//connect to the reblogs
 		this.connectReblogs();
@@ -34,38 +34,52 @@ RING.Tumblr = RING.Post.extend({
 		this.getReblogLevel();
 		//listen for changes in visibility
 		if(this.origin) {
+			//listen to the reblogged_from post to set the visibility
 			this.listenTo(this.origin, "change:visible", this.originVisibility);
 		} else {
 			//move the origin when the time changes
 			this.listenTo(RING.controls, "change:startTime", this.getPositionFromTime);
 			this.listenTo(RING.controls, "change:endTime", this.getPositionFromTime);
+			this.on("change:visible", this.getPositionFromTime);
 		}
 		//the first point is the center of the circle
-		this.systemNodes = [new THREE.Vector3(this.get("x"), this.get('y'), 0)];
+		this.systemNodes = [{
+			v : new THREE.Vector3(this.get("x"), this.get('y'), 0),
+			t : this.get("theta"),
+			r : this.get('radius'),
+		}];
+		this.systemNodesTween = [];
 		this.on("change:x", _.throttle(this.moveStartLine, 100));
 		this.on("change:y", _.throttle(this.moveStartLine, 100));
+		//this.on("change:x", _.throttle(this.moveLine, 100));
+		//this.on("change:y", _.throttle(this.moveLine, 100));
 
 	},
 	//second pass at loading things
 	allLoaded2 : function() {
+
 		//position the reblogs if this is the origin
 		if(!this.origin) {
 			this.positionReblogs();
 			this.on("change:theta", this.thetaChange);
+			//this.on("change", this.positionReblogs);
 		} else {
+			this.view.drawEdgeToOrigin();
+		}
+	},
+	//third pass at loading things
+	allLoaded3 : function() {
+		//position the reblogs if this is the origin
+		if(this.origin) {
 			//this.view.drawEdgeToOrigin();
 		}
-		//listen for changes and move all of the lines
-		if(!this.origin) {
-			
-		}
-		//this.on("change:theta", this.moveLine);
 	},
 	originVisibility : function(model, visible) {
 		//if the origin isn't visible, neither should this
 		if(!visible) {
 			this.set("visible", false);
-		} 
+		}
+		//this.lineVisible(model, visible);
 	},
 	changeReblogLevel : function(model, reblogLevel) {
 		var origin = this.origin;
@@ -111,13 +125,16 @@ RING.Tumblr = RING.Post.extend({
 		var theta = this.get("theta");
 		for(var i = 0, len = this.reblogs.length; i < len; i++) {
 			var reblog = this.reblogs[i];
-			var angle = theta + RING.Util.randomFloat(-.1, .1);
-			var radius = RING.Util.randomInt(30, 50);
+			//pick a random index
 			reblog.systemNodeIndex = RING.Util.randomInt(0, this.systemNodes.length);
+			//position the post relative to that node
+			var node = this.systemNodes[reblog.systemNodeIndex];
+			var angle = node.t + RING.Util.randomFloat(-.1, .1);
+			var radius = RING.Util.randomInt(30, 50) + node.r;
 			//get that position
-			var position = this.systemNodes[reblog.systemNodeIndex];
-			var rX = radius * Math.cos(angle) + position.x;
-			var rY = radius * Math.sin(angle) + position.y;
+			//var position = this.systemNodes[reblog.systemNodeIndex].v;
+			var rX = radius * Math.cos(angle);
+			var rY = radius * Math.sin(angle);
 			rRadius = Math.sqrt(rX * rX + rY * rY);
 			reblog.set({
 				x : rX,
@@ -126,25 +143,43 @@ RING.Tumblr = RING.Post.extend({
 				radius : rRadius,
 			});
 			reblog.positionReblogs();
-			reblog.view.drawEdgeToOrigin()
 		}
 	},
 	//when the theta changes, move everything by that amount
-	thetaChange : function(model, theta){
+	thetaChange : function(model, theta) {
 		//this.positionReblogs();
 		var diff = theta - this.previous("theta");
 		this.repositionReblogs(diff);
 	},
-	moveStartLine : function(){
+	moveStartLine : function() {
 		var x = this.get("x");
 		var y = this.get("y");
-		this.systemNodes[0].x = x;
-		this.systemNodes[0].y = y;
+		this.systemNodes[0].r = this.get("radius");
+		this.systemNodes[0].t = this.get("theta");
+		//this.systemNodes[0].x = x;
+		//this.systemNodes[0].y = y;
+		//stop the previous tween if there is one
+		if(this.systemNodesTween[0]) {
+			this.systemNodesTween[0].stop();
+		}
+		this.systemNodesTween[0] = new TWEEN.Tween({
+			x : this.systemNodes[0].v.x,
+			y : this.systemNodes[0].v.y,
+		}).to({
+			x : x,
+			y : y,
+		}, 800).onUpdate( function(node, view) {
+			return function() {
+				//set the value
+				node.v.setX(this.x);
+				node.v.setY(this.y);
+				if(view.line) {
+					view.line.geometry.verticesNeedUpdate = true;
+				}
+			}
+		}(this.systemNodes[0], this.view)).start();
 	},
 	repositionReblogs : function(diff) {
-		//this.moveLine();
-		var x = this.get('x');
-		var y = this.get('y');
 		this.moveLine(diff);
 		for(var i = 0, len = this.reblogs.length; i < len; i++) {
 			var reblog = this.reblogs[i];
@@ -157,7 +192,6 @@ RING.Tumblr = RING.Post.extend({
 			});
 			reblog.repositionReblogs(diff);
 		}
-		//this.moveLine();
 	},
 	//L-SYSTEM LINES///////////////////////////////////////////////////////////
 	makeSystemNodes : function() {
@@ -173,38 +207,61 @@ RING.Tumblr = RING.Post.extend({
 		var nodeCount = RING.Util.randomInt(maxLines, minLines);
 		for(var i = 0; i < nodeCount; i++) {
 			//make a random point that reaches a little further than the last in roughly the same direction
-			var randomAngle = angle + RING.Util.randomFloat(-.1, .1);
+			var randomAngle = angle + RING.Util.randomFloat(-.5, .5);
 			var randomRadius = RING.Util.randomInt(30, 50);
 			var newX = randomRadius * Math.cos(randomAngle) + x;
 			var newY = randomRadius * Math.sin(randomAngle) + y;
+			//get the angle and radius of that new xy
+			var t = Math.atan2(newY, newX);
+			var r = Math.sqrt(newX * newX + newY * newY);
 			//push that position on
 			var vect = new THREE.Vector3(newX, newY, 0);
-			this.systemNodes.push(vect);
+			var node = {
+				t : t,
+				r : r,
+				v : vect,
+			}
+			this.systemNodes.push(node);
 			x = newX;
 			y = newY;
 		}
 	},
 	moveLine : function(diff) {
-		var x = this.get("x");
-		var y = this.get("y");
-		this.systemNodes[0].x = x;
-		this.systemNodes[0].y = y;
 		//move all of the system nodes by that angle
 		for(var i = 1; i < this.systemNodes.length; i++) {
 			var node = this.systemNodes[i];
-			var nx = node.x;
-			var ny = node.y;
-			//convert these to polar
-			var theta = Math.atan2(ny, nx) + diff;
-			var radius = Math.sqrt(nx * nx + ny * ny);
-			//rotate them
-			//theta = diff;
-			//convert back to cartesian
-			nx = radius * Math.cos(theta);
-			ny = radius * Math.sin(theta);
-			//set the value
-			node.setX(nx);
-			node.setY(ny);
+			var nx = node.v.x;
+			var ny = node.v.y;
+			//rotate the coords
+			node.t += diff;
+			//recalculate the vector position relative to the previous node
+			var newX = node.r * Math.cos(node.t);
+			var newY = node.r * Math.sin(node.t);
+
+			var view = this.view;
+
+			if(this.systemNodesTween[i]) {
+				this.systemNodesTween[i].stop();
+			}
+			this.systemNodesTween[i] = new TWEEN.Tween({
+				x : nx,
+				y : ny,
+			}).to({
+				x : newX,
+				y : newY
+			}, 800).onUpdate( function(node, view) {
+				return function() {
+					//set the value
+					node.v.setX(this.x);
+					node.v.setY(this.y);
+					if(view.line) {
+						view.line.geometry.verticesNeedUpdate = true;
+					}
+				}
+			}(node, view)).start();
+
+			//node.setX(newX);
+			//node.setY(newY);
 		}
 		//move the vertices
 		if(this.view.line) {
@@ -244,21 +301,46 @@ RING.Tumblr.View = RING.Post.View.extend({
 	initialize : function() {
 		this.superInit();
 		this.listenTo(this.model, "change:visible", this.lineVisible);
-		this.listenTo(this.model, "change:theta", this.updateLines);
 	},
-	updateLines : function() {
-
-	},
+	//animate the entrance and exit of lines
 	lineVisible : function(model, visible) {
 		if(this.line) {
+			var originX = this.origin.get("x");
+			var originY = this.origin.get("y");
 			if(visible) {
 				RING.scene.add(this.line);
+				//make the lines fly in from the side
+				for(var i = 0; i < this.model.systemNodes.length; i++) {
+					var node = this.systemNodes[i];
+					//make each of the lines start at the origin, and reach towards their final position
+					//calculate final position
+					var x = node.r * Math.cos(node.t);
+					var y = node.r * Math.sin(node.t);
+					if(this.lineVisibleTween) {
+						this.lineVisibleTween.stop();
+					}
+					this.lineVisibleTween = new TWEEN.Tween({
+						x : originX,
+						y : originY,
+					}).to({
+						x : x,
+						y : y
+					}, 800).onUpdate( function(node, view) {
+						return function() {
+							//set the value
+							node.v.setX(this.x);
+							node.v.setY(this.y);
+							if(view.line) {
+								view.line.geometry.verticesNeedUpdate = true;
+							}
+						}
+					}(node, this)).start();
+				}
 			} else {
+				//make the lines fly out
 				RING.scene.remove(this.line);
 			}
 		}
-	},
-	clicked : function(x, y) {
 
 	},
 	createElement : function() {
@@ -287,16 +369,22 @@ RING.Tumblr.View = RING.Post.View.extend({
 	drawEdgeToOrigin : function() {
 		//if there are already lines, don't draw some more
 		//if(!this.line) {
-			var origin = this.model.origin;
-			if(origin) {
-				var geometry = new THREE.Geometry();
-				geometry.vertices.push(this.model.systemNodes[0]);
-				//geometry.vertices.push(origin.systemNodes[0]);
-				for(var i = this.model.systemNodeIndex; i >= 0; i--) {
-					geometry.vertices.push(origin.systemNodes[i]);
-				}
-				this.line = new THREE.Line(geometry, RING.Tumblr.lineMaterial);
+		var origin = this.model.origin;
+		if(origin) {
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push(this.model.systemNodes[0].v);
+			//geometry.vertices.push(origin.systemNodes[0]);
+			for(var i = this.model.systemNodeIndex; i >= 0; i--) {
+				geometry.vertices.push(origin.systemNodes[i].v);
 			}
+			this.line = new THREE.Line(geometry, RING.Tumblr.lineMaterial);
+		}
 		//}
+	},
+	remove : function() {
+		//remove all of the objects that were added to the scene
+		if(this.line) {
+			RING.scene.remove(this.line);
+		}
 	},
 })

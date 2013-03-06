@@ -33,9 +33,9 @@ RING.Controls = Backbone.Model.extend({
 		//listen for changes to the tags
 		this.listenTo(this.artistList, "change:checked", this.updateArtists);
 		//update the canvas whenver there is a change
-		this.on("change:startTime", _.throttle(this.render, 300));
-		this.on("change:endTime", _.throttle(this.render, 300));
-		this.on("change:reblogLevel", _.throttle(this.render, 300));
+		this.on("change:startTime", _.throttle(this.render, 1000));
+		this.on("change:endTime", _.throttle(this.render, 1000));
+		this.on("change:reblogLevel", _.throttle(this.render, 1000));
 		//make the views
 		this.view = new RING.Controls.View({
 			model : this,
@@ -94,6 +94,7 @@ RING.Controls = Backbone.Model.extend({
 		})
 	},
 	render : function() {
+		//pause rendering 
 		var delayTime = 100;
 		var artists = this.artists;
 		var endTime = this.get("endTime");
@@ -170,16 +171,6 @@ RING.Controls = Backbone.Model.extend({
 				model.set("visible", true);
 			}, RING.Util.randomInt(0, delayTime), model);
 		};
-		/*
-		 //update the counter
-		 var visibleTumblrs = RING.tumblrCollection.where({
-		 "visible" : true
-		 })
-		 var visibleTwitter = RING.twitterCollection.where({
-		 "visible" : true
-		 })
-		 this.set("visiblePosts", visibleTumblrs.length + visibleTwitter.length);
-		 */
 	},
 	//this is the loading sequence for all of the info
 	loadCache : function() {

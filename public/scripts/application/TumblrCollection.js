@@ -37,6 +37,9 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		this.forEach(function(model, index) {
 			model.allLoaded2();
 		});
+		this.forEach(function(model, index) {
+			model.allLoaded3();
+		});
 		this.primary = this.filter(function(model) {
 			return model.get('reblogged_from') === null;
 		})
