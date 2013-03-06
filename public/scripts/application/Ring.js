@@ -32,8 +32,6 @@ var RING = function() {
 		RING.controls = new RING.Controls();
 		//make the attract mode
 		RING.attractMode = new RING.AttractMode();
-		//start it off
-		render();
 	}
 
 	//a loaded counter which will remove the loading indicator
@@ -165,17 +163,24 @@ var RING = function() {
 	}
 
 	//DRAW LOOP//////////////////////////////////////////////////////////////////
+	
+	var paused = true;
+
+	function pause() {
+		paused = true;
+	}
 
 	function start() {
-
+		paused = false;
+		render();
 	}
 
 	function render() {
-		requestAnimationFrame(render);
-		if(RING.dev) {
-			stats.update();
-		}
-		if(!RING.pause) {
+		if(!paused) {
+			requestAnimationFrame(render);
+			if(RING.dev) {
+				stats.update();
+			}
 			RING.renderer.render(RING.scene, RING.camera);
 			//update the tweet
 			TWEEN.update();
@@ -188,10 +193,10 @@ var RING = function() {
 
 	return {
 		initialize : initialize,
-		start : start,
 		rtree : rtree,
 		loaded : loaded,
-		pause : false,
+		pause : pause,
+		start : start,
 	};
 
 }();

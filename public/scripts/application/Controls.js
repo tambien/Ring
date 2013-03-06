@@ -17,6 +17,7 @@ RING.Controls = Backbone.Model.extend({
 		//loading info in the corner
 		"visiblePosts" : 0,
 		"loading" : 0,
+		"addLoaded" : false,
 		"loadingText" : "",
 	},
 	initialize : function(attributes, options) {
@@ -36,6 +37,8 @@ RING.Controls = Backbone.Model.extend({
 		this.on("change:startTime", _.throttle(this.render, 1000));
 		this.on("change:endTime", _.throttle(this.render, 1000));
 		this.on("change:reblogLevel", _.throttle(this.render, 1000));
+		//start the rendering when everything is loaded
+		this.on("change:allLoaded", this.allLoaded);
 		//make the views
 		this.view = new RING.Controls.View({
 			model : this,
@@ -59,6 +62,11 @@ RING.Controls = Backbone.Model.extend({
 		}
 		//start the loading
 		this.loadCache();
+	},
+	allLoaded : function(model, allLoaded){
+		if (allLoaded){
+			RING.start();
+		}
 	},
 	updateArtists : function(model, checked) {
 		if(checked) {
@@ -179,7 +187,8 @@ RING.Controls = Backbone.Model.extend({
 	loadCache : function() {
 		var reqString = window.location + "get?type=cache";
 		var self = this;
-		self.set("loadingText", "Connecting to server")
+		self.set("loading", self.get('loading') + 1);
+		self.set("loadingText", "Downloading Tweets and Tumblr Posts")
 		$.ajax(reqString, {
 			success : function(response) {
 				var posts = response.posts;
@@ -202,7 +211,7 @@ RING.Controls = Backbone.Model.extend({
 						});
 						//increment the loading bar
 						self.set("loading", self.get('loading') + 1);
-					}, i * 10, post);
+					}, i * 100, post);
 				}
 			},
 			error : function() {
@@ -667,9 +676,9 @@ RING.LoadingScreen = Backbone.View.extend({
 	updateProgress : function(model, loadedCount) {
 		var total = 1;
 		if(RING.installation) {
-			total = 15;
+			total = 16;
 		} else {
-			total = 15;
+			total = 16;
 		}
 		var percentage = Math.round((loadedCount / total) * 100);
 		percentage += "%";
@@ -679,6 +688,7 @@ RING.LoadingScreen = Backbone.View.extend({
 		//turn the bar into a next button
 		if(percentage === "100%") {
 			//it's done loading
+			this.model.set("allLoaded", true);
 			this.updateText(this.model, "BEGIN");
 			this.$el.addClass("begin").transition({
 				width : "126px",

@@ -14,14 +14,18 @@ RING.AttractMode = Backbone.Model.extend({
 	initialize : function(attributes, options) {
 		//listen for clicks to the screen
 		RING.$container.click(this.touched.bind(this));
-		//set a timer for when to switch into attract mode
-		setInterval(this.testAttractMode.bind(this), 10000);
 		//change into / out of attract mode
 		this.on("change:attractMode", this.changeAttract);
+		this.listenTo(RING.controls, "change:allLoaded", this.allLoaded);
 	},
 	//updates the last touched time
 	touched : function() {
 		this.set("lastTouch", new Date());
+	},
+	allLoaded : function() {
+		this.set("lastTouch", new Date());
+		//set a timer for when to switch into attract mode
+		setInterval(this.testAttractMode.bind(this), 30000);
 	},
 	testAttractMode : function() {
 		var lastTouch = this.get("lastTouch");
@@ -108,7 +112,7 @@ RING.AttractMode = Backbone.Model.extend({
 
 			post.clicked(vector.x, vector.y);
 		}
-	}, 
+	},
 	changeReblogLevel : function() {
 		RING.controls.set("reblogLevel", RING.Util.randomInt(0, 3));
 	},
