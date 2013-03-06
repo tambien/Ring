@@ -49,6 +49,9 @@ RING.Controls = Backbone.Model.extend({
 		this.loadingScreen = new RING.LoadingScreen({
 			model : this,
 		});
+		this.dateIndicator = new RING.DateIndicator({
+			model : this,
+		});
 		if(!RING.installation) {
 			this.search = new RING.Search({
 				model : this,
@@ -460,6 +463,46 @@ RING.DatePicker = Backbone.View.extend({
 		});
 	}
 });
+
+RING.DateIndicator = Backbone.View.extend({
+	
+	className : "dateIndicator",
+	
+	initialize : function(){
+		//add four dates to the canvas
+		this.$date0 = $("<div id='date0' class='dateNumber'>0</div>").appendTo(this.$el);
+		this.$date1 = $("<div id='date1' class='dateNumber'>1</div>").appendTo(this.$el);
+		this.$date2 = $("<div id='date2' class='dateNumber'>2</div>").appendTo(this.$el);
+		this.$date3 = $("<div id='date3' class='dateNumber'>3</div>").appendTo(this.$el);
+		this.$el.transition({
+			scale : .8,
+		})
+		this.$el.appendTo($("#container"));
+		this.render(this.model);
+		//listen for date changes
+		this.listenTo(this.model, "change:startTime", this.render)
+		this.listenTo(this.model, "change:endTime", this.render)
+	},
+	render : function(model){
+		//how many days between the start and end time? 
+		var startTime = this.model.get("startTime");
+		var endTime = this.model.get("endTime");
+		var diff = endTime - startTime;
+		var increment = diff/4;
+		var dayInMS = 60 * 1000 * 60 * 24;
+		
+		this.setDate(this.$date0, startTime);
+		this.setDate(this.$date1, new Date(startTime + increment));
+		this.setDate(this.$date2, new Date(startTime + increment*2));
+		this.setDate(this.$date3, new Date(startTime + increment*3));
+	},
+	setDate : function(element, date){
+		if (date.getTime()){
+			
+		}
+	}
+	
+})
 
 RING.ReblogLevel = Backbone.View.extend({
 

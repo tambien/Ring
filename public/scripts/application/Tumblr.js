@@ -305,17 +305,21 @@ RING.Tumblr.View = RING.Post.View.extend({
 	//animate the entrance and exit of lines
 	lineVisible : function(model, visible) {
 		if(this.line) {
-			var originX = this.origin.get("x");
-			var originY = this.origin.get("y");
+			var originX = model.origin.get("x");
+			var originY = model.origin.get("y");
 			if(visible) {
 				RING.scene.add(this.line);
-				//make the lines fly in from the side
-				for(var i = 0; i < this.model.systemNodes.length; i++) {
-					var node = this.systemNodes[i];
+				//make the lines come from the origin node
+				
+				for(var i = 0; i < model.systemNodes.length; i++) {
+					var node = model.systemNodes[i];
 					//make each of the lines start at the origin, and reach towards their final position
 					//calculate final position
 					var x = node.r * Math.cos(node.t);
 					var y = node.r * Math.sin(node.t);
+					//set the vertex to the origin
+					node.v.x = originX;
+					node.v.y = originY;
 					if(this.lineVisibleTween) {
 						this.lineVisibleTween.stop();
 					}
@@ -325,7 +329,7 @@ RING.Tumblr.View = RING.Post.View.extend({
 					}).to({
 						x : x,
 						y : y
-					}, 800).onUpdate( function(node, view) {
+					}, 500).easing(TWEEN.Easing.Elastic.Out).onUpdate( function(node, view) {
 						return function() {
 							//set the value
 							node.v.setX(this.x);

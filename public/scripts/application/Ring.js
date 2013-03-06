@@ -58,11 +58,11 @@ var RING = function() {
 		//the renderer
 		RING.renderer = new THREE.WebGLRenderer({
 			antialias : true,
-			clearColor : 0x000000,
-			clearAlpha : 1
+			//clearColor : 0x000000,
+			//clearAlpha : 1
 		});
 		RING.renderer.sortObjects = false;
-		$container.append(RING.renderer.domElement);
+		$("#canvas").append(RING.renderer.domElement);
 		//initialize the size
 		sizeTHREE();
 	}

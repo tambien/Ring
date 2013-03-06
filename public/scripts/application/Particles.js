@@ -207,7 +207,7 @@ RING.Particles = function() {
 		system.geometry.verticesNeedUpdate = true;
 	}
 
-	function positionParticle(model, x, y) {
+	function positionParticle(model, x, y, callback) {
 		var index = model.get("particleIndex");
 		var system;
 		//get an object from the array depending on the type of the object
@@ -238,6 +238,10 @@ RING.Particles = function() {
 			system.geometry.vertices[index].x = this.x;
 			system.geometry.vertices[index].y = this.y;
 			system.geometry.verticesNeedUpdate = true;
+		}).onComplete(function() {
+			if(callback) {
+				callback();
+			}
 		}).start();
 		//.easing( TWEEN.Easing.Elastic.InOut )
 	}
