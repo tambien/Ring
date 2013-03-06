@@ -12,6 +12,8 @@ RING.Artist = Backbone.Model.extend({
 		"handle" : '',
 		"color" : [255, 255, 255],
 		"visible" : false,
+		//put the emuze ones in a special container
+		"eMuze" : false,
 	},
 	initialize : function(attributes, options) {
 
@@ -58,10 +60,18 @@ RING.Artist.View = Backbone.View.extend({
 		this.model.set("checked", !this.model.get("checked"));
 	},
 	addOrRemove : function() {
-		if(this.model.get("visible")) {
-			this.$el.appendTo($("#tagsList"));
+		if(this.model.get("eMuze")) {
+			if(this.model.get("visible")) {
+				this.$el.appendTo($("#eMuzeTags"));
+			} else {
+				this.$el.remove();
+			}
 		} else {
-			this.$el.remove();
+			if(this.model.get("visible")) {
+				this.$el.appendTo($("#tagsList"));
+			} else {
+				this.$el.remove();
+			}
 		}
 	}
 });
@@ -82,7 +92,7 @@ RING.Artists = Backbone.Collection.extend({
 		this.on("add", this.added);
 		this.on("add", this.makeVisible);
 		//this.listenTo("change:checked", this.searchTags);
-		this.topPosts = 14;
+		//this.topPosts = 14;
 		this.maxLength = 18;
 	},
 	getArtists : function(callback) {
@@ -128,10 +138,9 @@ RING.Artists = Backbone.Collection.extend({
 	},
 	added : function(model) {
 		this.searches.push(model);
-		if (this.length>this.maxLength){
+		if(this.length > this.maxLength) {
 			//remove the one after the top posts
-			var remove = this.searches.splice(this.topPosts, 1);
-			remove = remove[0];
+			var remove = this.searches.shift();
 			remove.set("visible", false);
 			remove.set("checked", false);
 			this.remove(remove);

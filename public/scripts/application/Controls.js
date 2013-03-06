@@ -11,7 +11,7 @@ RING.Controls = Backbone.Model.extend({
 		//right now
 		"endTime" : new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()),
 		//primary/reblogs/reblogs of reblogs
-		"reblogLevel" : 0,
+		"reblogLevel" : 1,
 		//expanded view
 		"expanded" : false,
 		//loading info in the corner
@@ -63,9 +63,11 @@ RING.Controls = Backbone.Model.extend({
 		//start the loading
 		this.loadCache();
 	},
-	allLoaded : function(model, allLoaded){
-		if (allLoaded){
+	allLoaded : function(model, allLoaded) {
+		if(allLoaded) {
 			RING.start();
+			//randomly select an artist
+			RING.attractMode.changeArtist();
 		}
 	},
 	updateArtists : function(model, checked) {
@@ -105,7 +107,7 @@ RING.Controls = Backbone.Model.extend({
 		})
 	},
 	render : function() {
-		//pause rendering 
+		//pause rendering
 		var delayTime = 100;
 		var artists = this.artists;
 		var endTime = this.get("endTime");
@@ -183,40 +185,129 @@ RING.Controls = Backbone.Model.extend({
 			}, RING.Util.randomInt(0, delayTime), model);
 		};
 	},
-	//this is the loading sequence for all of the info
-	loadCache : function() {
-		var reqString = window.location + "get?type=cache";
+	//loads the two emuze things into a special spot
+	loadeMuze : function(callback) {
 		var self = this;
-		self.set("loading", self.get('loading') + 1);
-		self.set("loadingText", "Downloading Tweets and Tumblr Posts")
+		this.loadFEEDsxsw(function() {
+			self.loadConnecteMuze(callback);
+		})
+	},
+	loadFEEDsxsw : function(callback) {
+		var reqString = window.location + "get?type=week&artist=FEEDsxsw";
+		var self = this;
+		self.set("loadingText", "Getting FEEDsxsw Posts")
 		$.ajax(reqString, {
 			success : function(response) {
-				var posts = response.posts;
-				//increment the loading bar
+				response = response.posts[0];
 				self.set("loading", self.get('loading') + 1);
-				self.set("loadingText", "Fetching Artists Posts")
-				//for each artist, add it to the twitter and tumblr posts
-				for(var i = 0; i < posts.length; i++) {
-					var post = posts[i];
-					setTimeout(function(post) {
-						self.set("loadingText", "Loading posts from " + post.artist.name);
-						RING.tumblrCollection.addArtist(post);
-						RING.twitterCollection.addArtist(post);
-						//add the artist to the list also
-						//make an artist
-						var artist = new RING.Artist(post.artist);
-						//add that artist to the collection
-						self.artistList.add(artist, {
-							merge : false,
-						});
-						//increment the loading bar
-						self.set("loading", self.get('loading') + 1);
-					}, i * 100, post);
+				if(response.artist !== null) {
+					//update the tumblr and twitter collections with the results
+					RING.tumblrCollection.add(response.tumblr, {
+						merge : false,
+					});
+					RING.twitterCollection.add(response.twitter, {
+						merge : false,
+					});
+					//gotta do all that loading bullshit
+					//need to do this just on the new artists
+					RING.tumblrCollection.loadArtist(response.artist.name);
+					RING.twitterCollection.loadArtist(response.artist.name);
+					//make an artist
+					var artist = new RING.Artist(response.artist);
+					//add that artist to the collection
+					self.artistList.add(artist, {
+						merge : false,
+						silent : true,
+					});
+					//put the artist in a special box
+					artist.set("eMuze", true);
+					artist.set("visible", true);
+
+					callback();
 				}
 			},
 			error : function() {
 				console.error("could not get that artist");
 			}
+		});
+	},
+	loadConnecteMuze : function(callback) {
+		var reqString = window.location + "get?type=week&artist=eMuze%20Connect";
+		var self = this;
+		self.set("loadingText", "Getting eMuze Connect Posts")
+		$.ajax(reqString, {
+			success : function(response) {
+				response = response.posts[0];
+				self.set("loading", self.get('loading') + 1);
+				if(response.artist !== null) {
+					//update the tumblr and twitter collections with the results
+					RING.tumblrCollection.add(response.tumblr, {
+						merge : false,
+					});
+					RING.twitterCollection.add(response.twitter, {
+						merge : false,
+					});
+					//gotta do all that loading bullshit
+					//need to do this just on the new artists
+					RING.tumblrCollection.loadArtist(response.artist.name);
+					RING.twitterCollection.loadArtist(response.artist.name);
+					//make an artist
+					var artist = new RING.Artist(response.artist);
+					//add that artist to the collection
+					self.artistList.add(artist, {
+						merge : false,
+						silent : true,
+					});
+					//put the artist in a special box
+					artist.set("eMuze", true);
+					artist.set("visible", true);
+
+					callback();
+				}
+			},
+			error : function() {
+				console.error("could not get that artist");
+			}
+		});
+	},
+	//this is the loading sequence for all of the info
+	loadCache : function() {
+		var reqString = window.location + "get?type=cache";
+		var self = this;
+		self.set("loading", self.get('loading') + 1);
+		self.loadeMuze(function() {
+			self.set("loadingText", "Downloading Tweets and Tumblr Posts")
+			$.ajax(reqString, {
+				success : function(response) {
+					var posts = response.posts;
+					//increment the loading bar
+					self.set("loading", self.get('loading') + 1);
+					self.set("loadingText", "Fetching Artists Posts")
+					//for each artist, add it to the twitter and tumblr posts
+					for(var i = 0; i < posts.length; i++) {
+						var post = posts[i];
+						setTimeout(function(post) {
+							self.set("loadingText", "Loading posts from " + post.artist.name);
+							RING.tumblrCollection.addArtist(post);
+							RING.twitterCollection.addArtist(post);
+							//add the artist to the list also
+							//make an artist
+							var artist = new RING.Artist(post.artist);
+							//add that artist to the collection
+							self.artistList.add(artist, {
+								merge : false,
+								silent : true,
+							});
+							artist.set("visible", true);
+							//increment the loading bar
+							self.set("loading", self.get('loading') + 1);
+						}, i * 100, post);
+					}
+				},
+				error : function() {
+					console.error("could not get that artist");
+				}
+			})
 		})
 	},
 	loadArtists : function(artistName, callback) {
@@ -320,7 +411,7 @@ RING.Controls.View = Backbone.View.extend({
 	expand : function(model, expand) {
 		var time = 500;
 		var width = "400px";
-		var height = "580px";
+		var height = "700px";
 		var self = this;
 		if(expand) {
 			//first expand the y direction
@@ -474,15 +565,16 @@ RING.DatePicker = Backbone.View.extend({
 });
 
 RING.DateIndicator = Backbone.View.extend({
-	
+
 	className : "dateIndicator",
-	
-	initialize : function(){
-		//add four dates to the canvas
-		this.$date0 = $("<div id='date0' class='dateNumber'>0</div>").appendTo(this.$el);
-		this.$date1 = $("<div id='date1' class='dateNumber'>1</div>").appendTo(this.$el);
-		this.$date2 = $("<div id='date2' class='dateNumber'>2</div>").appendTo(this.$el);
-		this.$date3 = $("<div id='date3' class='dateNumber'>3</div>").appendTo(this.$el);
+
+	initialize : function() {
+		//add five dates to the canvas
+		this.$dates = [];
+		for(var i = 0; i < 4; i++) {
+			var date = $("<div class='dateNumber'>0</div>").appendTo(this.$el);
+			this.$dates.push(date);
+		}
 		this.$el.transition({
 			scale : .8,
 		})
@@ -492,25 +584,79 @@ RING.DateIndicator = Backbone.View.extend({
 		this.listenTo(this.model, "change:startTime", this.render)
 		this.listenTo(this.model, "change:endTime", this.render)
 	},
-	render : function(model){
-		//how many days between the start and end time? 
+	render : function(model) {
+		//how many days between the start and end time?
 		var startTime = this.model.get("startTime");
 		var endTime = this.model.get("endTime");
 		var diff = endTime - startTime;
-		var increment = diff/4;
 		var dayInMS = 60 * 1000 * 60 * 24;
+
+		var days = diff / dayInMS;
 		
-		this.setDate(this.$date0, startTime);
-		this.setDate(this.$date1, new Date(startTime + increment));
-		this.setDate(this.$date2, new Date(startTime + increment*2));
-		this.setDate(this.$date3, new Date(startTime + increment*3));
+		var radius = 330;
+
+		//if there are more than two days
+		//just show the month/day
+		if(days > 2) {
+			for(var i = 0; i < this.$dates.length; i++) {
+				var date = this.$dates[i];
+				if(i < days) {
+					var d = parseInt(startTime.getDate()) + i;
+					var m = parseInt(startTime.getMonth()) + 1;
+					date.html(m + "/" + d);
+					//position the date around the circle
+					var theta = (i / days) * Math.PI * 2 - Math.PI / 2;
+					var top = radius * Math.sin(theta) + 350;
+					var left = radius * Math.cos(theta) + 350;
+					date.transition({
+						top : top,
+						left : left,
+					}, 500);
+				} else {
+					date.transition({
+						top : -100,
+						left : 350,
+					}, 500);
+				}
+			}
+		} else {
+			//otherwise, show the date and 12pm.
+			for(var i = 0; i < this.$dates.length; i++) {
+				var date = this.$dates[i];
+				if(i < days * 2) {
+					//if it's even show the month
+					if(i % 2 === 0) {
+						var d = parseInt(startTime.getDate()) + i / 2;
+						var m = parseInt(startTime.getMonth()) + 1;
+						date.html(m + "/" + d);
+					} else {
+						//show the hour
+						date.html("12pm");
+					}
+					//position the date around the circle
+					var halfDays = days * 2;
+					var theta = (i / halfDays) * Math.PI * 2 - Math.PI / 2;
+					var top = radius * Math.sin(theta) + 350;
+					var left = radius * Math.cos(theta) + 350;
+					date.transition({
+						top : top,
+						left : left,
+					}, 500);
+				} else {
+					date.transition({
+						top : -100,
+						left : 350,
+					}, 500);
+				}
+			}
+		}
+
 	},
-	setDate : function(element, date){
-		if (date.getTime()){
-			
+	setDate : function(element, date) {
+		if(date.getTime()) {
+
 		}
 	}
-	
 })
 
 RING.ReblogLevel = Backbone.View.extend({
@@ -676,9 +822,9 @@ RING.LoadingScreen = Backbone.View.extend({
 	updateProgress : function(model, loadedCount) {
 		var total = 1;
 		if(RING.installation) {
-			total = 16;
+			total = 18;
 		} else {
-			total = 16;
+			total = 18;
 		}
 		var percentage = Math.round((loadedCount / total) * 100);
 		percentage += "%";
