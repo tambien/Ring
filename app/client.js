@@ -53,6 +53,9 @@ var artists = require('./artists');
 			case "artists":
 				res.send(artists.getArtistNames());
 				break;
+			case "artistsFull":
+				res.send(artists.getArtists());
+				break;
 			case "top":
 				res.send(artists.getTopArtists());
 				break;
@@ -85,7 +88,7 @@ var artists = require('./artists');
 		}, function() {
 			tmpCache.lastUpdate = new Date();
 			//remove the orphans from the tumblr list
-			for (var i=0; i<tmpCache.posts.length; i++){
+			for(var i = 0; i < tmpCache.posts.length; i++) {
 				var artistPosts = tmpCache.posts[i];
 				artistPosts.tumblr = removeOrphans(artistPosts.tumblr);
 			}

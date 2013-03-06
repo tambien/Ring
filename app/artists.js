@@ -92,12 +92,18 @@ var twitter = require('./twitter/twitter-db');
 				var artistName = item["gsx$artist"]["$t"];
 				var handle = item["gsx$twitter"]["$t"].toLowerCase();
 				var ignore = item["gsx$ignore"]["$t"];
+				var searchFor = item["gsx$searchfor"]["$t"];
 				var handleid = item["gsx$handleid"]["$t"];
 				//if the first char is an '@', remove it
 				if(handle.charAt(0) === '@') {
 					handle = handle.slice(1);
 				}
-				var search = [artistName.toLowerCase()];
+				var search = [];
+				if (searchFor !== ""){
+					search = [searchFor]
+				} else {
+					search = [artistName.toLowerCase()];
+				}
 				//if it has whitespace, remove the whitespace and add that tag as well
 				if(artistName.indexOf(' ') >= 0) {
 					search.push(artistName.replace(/ /g, '').toLowerCase());

@@ -13,7 +13,7 @@ RING.AttractMode = Backbone.Model.extend({
 
 	initialize : function(attributes, options) {
 		//listen for clicks to the screen
-		RING.$container.click(this.touched.bind(this));
+		RING.$container.mousemove(this.touched.bind(this));
 		//change into / out of attract mode
 		this.on("change:attractMode", this.changeAttract);
 		this.listenTo(RING.controls, "change:allLoaded", this.allLoaded);
@@ -25,7 +25,7 @@ RING.AttractMode = Backbone.Model.extend({
 	allLoaded : function() {
 		this.set("lastTouch", new Date());
 		//set a timer for when to switch into attract mode
-		setInterval(this.testAttractMode.bind(this), 30000);
+		setInterval(this.testAttractMode.bind(this), 10000);
 	},
 	testAttractMode : function() {
 		var lastTouch = this.get("lastTouch");
