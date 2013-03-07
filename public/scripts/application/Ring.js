@@ -129,6 +129,13 @@ var RING = function() {
 
 	function bindEvents() {
 		$(window).resize(sizeTHREE);
+		//remove the previous views whenever the mouse is down
+		$container.mousedown(function() {
+			//remove any other post displays
+			$(".post").remove();
+			RING.highlight.position.x = -10000;
+			RING.highlight.position.y = -10000;
+		});
 		$container.click(mouseClicked);
 		//disable right click
 		$(document).bind("contextmenu", function(event) {
@@ -141,49 +148,84 @@ var RING = function() {
 		if(event.which == 2 || event.which == 3) {
 			return false;
 		}
-		//remove any other post displays
-		$(".post").remove();
-		RING.highlight.position.x = -10000;
-		RING.highlight.position.y = -10000;
 		//find the new object
 		var mouseX = event.offsetX;
 		var mouseY = event.offsetY;
-		var vector = new THREE.Vector3((mouseX / RING.width ) * 2 - 1, -(mouseY / RING.height ) * 2 + 1, 0);
+		var vector = new THREE.Vector3((mouseX / RING.width ) * 2 - 1, -(mouseY / RING.height ) * 2 + 1, 1);
 		projector.unprojectVector(vector, RING.camera);
 		var dir = vector.sub(RING.camera.position).normalize();
 		var ray = new THREE.Ray(RING.camera.position, dir);
 		var distance = -RING.camera.position.z / dir.z;
 		var pos = RING.camera.position.clone().add(dir.multiplyScalar(distance));
-		var width = 1;
-		var res = rtree.search({
-			x : pos.x - width,
-			y : pos.y - width,
-			w : width * 2,
-			h : width * 2,
+		//get all the visible posts
+		var visible = RING.tumblrCollection.where({
+			visible : true,
 		})
-		//get the post which is closest to the center of the mouse and has the highest z axis
-		//go throgh and get only the points that are on top
-		var topPost;
-		var highestZ = -1000;
-		for(var i = 0; i < res.length; i++) {
-			var post = res[i];
-			var postZ = post.view.particle.z;
-			if (postZ > highestZ){
-				topPost = post;
-				highestZ = postZ;
+		visible = visible.concat(RING.twitterCollection.where({
+			visible : true,
+		}));
+		pos.setZ(1);
+		var closestDist = 100000;
+		var closestModels = []
+		//var closest
+		_.forEach(visible, function(model) {
+			//var dist = model.view.particle.distanceTo(pos);
+			//if(dist < closestDist) {
+			//	closestDist = dist;
+			//	closestModel = model;
+			//}
+			var dist = model.view.particle.distanceTo(pos);
+			if(dist < model.get('size')) {
+				closestModels.push(model);
 			}
+		});
+		//for all of the matching models, find the one with the highest z
+		var highestZ = -10000;
+		var closestModel;
+		_.forEach(closestModels, function(model) {
+			var modelZ = model.view.particle.z
+			if(modelZ > highestZ) {
+				closestModel = model;
+				highestZ = modelZ;
+			}
+		});
+		if(closestModel) {
+			closestModel.clicked(mouseX, mouseY);
+			RING.highlight.position.x = closestModel.get("x");
+			RING.highlight.position.y = closestModel.get("y");
+			RING.highlight.scale.x = closestModel.get("size") * 1.6;
+			RING.highlight.scale.y = closestModel.get("size") * 1.6;
 		}
-		if(topPost) {
-			//check that it was actually within the element
-			var box = topPost.boundingBox;
-			var inX = pos.x > box.x && pos.x < box.x + box.w * 10;
-			var inY = pos.y > box.y && pos.y < box.y + box.h * 10;
-			topPost.clicked(mouseX, mouseY);
-			RING.highlight.position.x = topPost.get("x");
-			RING.highlight.position.y = topPost.get("y");
-			RING.highlight.scale.x = topPost.get("size") * 2;
-			RING.highlight.scale.y = topPost.get("size") * 2;
-		}
+		/*
+
+		 var width = 2;
+		 var res = rtree.search({
+		 x : pos.x - width,
+		 y : pos.y - width,
+		 w : width * 2,
+		 h : width * 2,
+		 })
+		 //get the post which is closest to the center of the mouse and has the highest z axis
+		 //go throgh and get only the points that are on top
+		 var topPost;
+		 var highestZ = -1000;
+		 for(var i = 0; i < res.length; i++) {
+		 var post = res[i];
+		 var postZ = post.view.particle.z;
+		 if (postZ > highestZ){
+		 topPost = post;
+		 highestZ = postZ;
+		 }
+		 }
+		 if(topPost) {
+		 //check that it was actually within the element
+		 var box = topPost.boundingBox;
+		 var inX = pos.x > box.x && pos.x < box.x + box.w * 10;
+		 var inY = pos.y > box.y && pos.y < box.y + box.h * 10;
+		 topPost.clicked(mouseX, mouseY);
+
+		 }
+		 */
 	}
 
 	//DRAW LOOP//////////////////////////////////////////////////////////////////

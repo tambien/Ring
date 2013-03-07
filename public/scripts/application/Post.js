@@ -122,9 +122,9 @@ RING.Post = Backbone.Model.extend({
 		}
 	},
 	getSizeFromNoteCount : function() {
-		var count = this.get("note_count")/2 + 1;
+		var count = this.get("note_count")/10 + 1;
 		var size = 0;
-		size = Math.log(count) * 5 + 5;
+		size = Math.log(count) * 20 + 5;
 		this.set("size", size);
 	},
 	moved : function() {
@@ -229,7 +229,7 @@ RING.Post.View = Backbone.View.extend({
 		var elCss = {	};
 		var containerCss = {};
 		//remove all of the classes
-		this.$container.find(".pointer").remove();
+		this.$el.find(".pointer").remove();
 		var posX = this.model.get("x");
 		var posY = this.model.get("y");
 		var paddingSide = "0px"
@@ -255,7 +255,7 @@ RING.Post.View = Backbone.View.extend({
 			elCss.top = RING.Util.toInt(y);
 			containerCss.left = paddingSide;
 			containerCss.top = paddingTop;
-			containerCss.top = "";
+			containerCss.bottom = "";
 			containerCss.right = "";
 			$(".top_left").clone().appendTo(this.$el);
 		} else if(posX < 0 && posY < 0) {

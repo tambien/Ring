@@ -293,7 +293,7 @@ RING.Controls = Backbone.Model.extend({
 					for(var i = 0; i < posts.length; i++) {
 						var post = posts[i];
 						setTimeout(function(post, index) {
-							self.set("loadingText", "Loading aritst " + index + "/14");
+							self.set("loadingText", "Loading Aritst " + index + "/14");
 							//add the artist to the list also
 							//make an artist
 							var artist = new RING.Artist(post.artist);
@@ -792,15 +792,15 @@ RING.Search = Backbone.View.extend({
 					console.log('got artist');
 					var post = response.posts[0];
 					if(post.artist !== null) {
-						RING.tumblrCollection.addArtist(post);
-						RING.twitterCollection.addArtist(post);
-						//add the artist to the list also
 						//make an artist
 						var artist = new RING.Artist(post.artist);
 						//add that artist to the collection
 						self.model.artistList.add(artist, {
 							merge : false,
 						});
+						RING.tumblrCollection.addArtist(post);
+						RING.twitterCollection.addArtist(post);
+						//add the artist to the list also
 						//check that artist
 						artist.set("checked", true);
 					}

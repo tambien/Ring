@@ -5,6 +5,8 @@
  */
 
 RING.Particles = function() {
+	
+	var particleCount = 30000;
 
 	var circleSystem, circleAttributes, circleUniforms;
 	var circleSystemPointer = 0;
@@ -17,17 +19,17 @@ RING.Particles = function() {
 
 	function init() {
 		//circle
-		var ret = initSystemWithTexture(circleSystem, circleAttributes, circleUniforms, "./images/Circle.gif");
+		var ret = initSystemWithTexture(circleSystem, circleAttributes, circleUniforms, "./images/Circle_large.gif");
 		circleSystem = ret.system;
 		circleAttributes = ret.attributes;
 		circleUniforms = ret.uniforms;
 		//circle grad
-		var ret = initSystemWithTexture(circleGradSystem, circleGradAttributes, circleGradUniforms, "./images/Circle_Grad.gif");
+		var ret = initSystemWithTexture(circleGradSystem, circleGradAttributes, circleGradUniforms, "./images/Circle_Grad_large.gif");
 		circleGradSystem = ret.system;
 		circleGradAttributes = ret.attributes;
 		circleGradUniforms = ret.uniforms;
 		//octagon
-		var ret = initSystemWithTexture(octaSystem, octaAttributes, octaUniforms, "./images/Octogon_Grad.gif");
+		var ret = initSystemWithTexture(octaSystem, octaAttributes, octaUniforms, "./images/Octogon_Grad_large.gif");
 		octaSystem = ret.system;
 		octaAttributes = ret.attributes;
 		octaUniforms = ret.uniforms;
@@ -81,7 +83,6 @@ RING.Particles = function() {
 
 		});
 
-		var particleCount = 30000;
 		var geometry = new THREE.Geometry();
 
 		for(var i = 0; i < particleCount; i++) {
@@ -130,6 +131,7 @@ RING.Particles = function() {
 				//return it's index and increment the pointer
 				model.set("particleIndex", circleSystemPointer);
 				circleSystemPointer++;
+				circleSystemPointer = circleSystemPointer % particleCount;
 				return particle;
 				break;
 			case 'octagon':
@@ -138,6 +140,7 @@ RING.Particles = function() {
 				//return it's index and increment the pointer
 				model.set("particleIndex", octaSystemPointer);
 				octaSystemPointer++;
+				octaSystemPointer = octaSystemPointer % particleCount;
 				return particle;
 				break;
 			case 'circle_grad':
@@ -146,6 +149,7 @@ RING.Particles = function() {
 				//return it's index and increment the pointer
 				model.set("particleIndex", circleGradSystemPointer);
 				circleGradSystemPointer++;
+				circleGradSystemPointer = circleGradSystemPointer % particleCount;
 				return particle;
 				break;
 			default:
