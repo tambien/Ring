@@ -231,6 +231,9 @@ RING.Tumblr = RING.Post.extend({
 		}
 	},
 	moveLine : function(diff) {
+		//make sure the view is removed and replaced with the new position
+		//this.view.lineVisible(this, false);
+		//this.view.lineVisible(this, true);
 		//move all of the system nodes by that angle
 		for(var i = 1; i < this.systemNodes.length; i++) {
 			var node = this.systemNodes[i];
@@ -241,7 +244,6 @@ RING.Tumblr = RING.Post.extend({
 			//recalculate the vector position relative to the previous node
 			var newX = node.r * Math.cos(node.t);
 			var newY = node.r * Math.sin(node.t);
-
 			var view = this.view;
 
 			if(this.systemNodesTween[i]) {

@@ -130,6 +130,10 @@ var RING = function() {
 	function bindEvents() {
 		$(window).resize(sizeTHREE);
 		$container.click(mouseClicked);
+		//disable right click
+		$(document).bind("contextmenu", function(event) {
+			event.preventDefault();
+		});
 	}
 
 	function mouseClicked(event) {

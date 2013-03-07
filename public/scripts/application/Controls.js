@@ -19,6 +19,7 @@ RING.Controls = Backbone.Model.extend({
 		"loading" : 0,
 		"addLoaded" : false,
 		"loadingText" : "",
+		"zoom" : 1000,
 	},
 	initialize : function(attributes, options) {
 		var blue = new THREE.Color().setRGB(40 / 255, 170 / 255, 225 / 255);
@@ -53,6 +54,9 @@ RING.Controls = Backbone.Model.extend({
 			model : this,
 		});
 		this.dateIndicator = new RING.DateIndicator({
+			model : this,
+		});
+		this.zoom = new RING.Zoom({
 			model : this,
 		});
 		if(!RING.installation) {
@@ -375,13 +379,6 @@ RING.Controls.View = Backbone.View.extend({
 		}
 	},
 	render : function(model) {
-		/*
-		if(this.model.get("loading") > 0) {
-		this.$loading.show(0);
-		} else {
-		this.$loading.hide(0);
-		}
-		*/
 		//set the date range stuff
 		var startTime = this.model.get("startTime");
 		var endTime = this.model.get("endTime");
@@ -588,8 +585,9 @@ RING.DateIndicator = Backbone.View.extend({
 		this.$el.appendTo($("#container"));
 		this.render(this.model);
 		//listen for date changes
-		this.listenTo(this.model, "change:startTime", this.render)
-		this.listenTo(this.model, "change:endTime", this.render)
+		this.listenTo(this.model, "change:startTime", this.render);
+		this.listenTo(this.model, "change:endTime", this.render);
+		this.listenTo(this.model, "change:zoom", this.zoom);
 	},
 	render : function(model) {
 		this.$el.html(" ");
@@ -662,10 +660,10 @@ RING.DateIndicator = Backbone.View.extend({
 				this.$el.find(".tertiary").remove();
 		}
 	},
-	setDate : function(element, date) {
-		if(date.getTime()) {
-
-		}
+	zoom : function(model, zoom){
+		this.$el.stop().transition({
+			scale : (1000/zoom)*.8,
+		}, 1200);
 	}
 })
 
@@ -861,6 +859,43 @@ RING.LoadingScreen = Backbone.View.extend({
 		})
 	}
 });
+
+RING.Zoom = Backbone.View.extend({
+
+	initialize : function() {
+		//listen to changes in teh zoom
+		this.listenTo(this.model, "change:zoom", this.zoom);
+		//listen to changes in the visible posts and get the maximum radius
+		this.listenTo(this.model, "change:visiblePosts", _.throttle(this.getZoom, 800));
+	},
+	zoom : function(model, zoom) {
+		//make a zoom tween
+		if(this.zoomTween) {
+			this.zoomTween.stop();
+		}
+		this.zoomTween = new TWEEN.Tween({
+			z : RING.camera.position.z,
+		}).to({
+			z : zoom,
+		}, 1200).easing(TWEEN.Easing.Exponential.Out).onUpdate(function() {
+			RING.camera.position.setZ(this.z);
+		}).start();
+	},
+	getZoom : function() {
+		var maxTumblr = RING.tumblrCollection.max(function(model) {
+			if (model.get("visible")){
+				return model.get("radius");
+			} else {
+				return 0;
+			}
+			return model.get("x");
+		})
+		var zoom = Math.log(maxTumblr.get("radius")/10)*280;
+		zoom = Math.max(1000, zoom);
+		//var zoom = Math.max(1000, maxTumblr.get("radius") * 2);
+		this.model.set("zoom", zoom);
+	}
+})
 
 Date.prototype.monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
