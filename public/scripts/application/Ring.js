@@ -163,30 +163,26 @@ var RING = function() {
 		})
 		//get the post which is closest to the center of the mouse and has the highest z axis
 		//go throgh and get only the points that are on top
-		var closest;
-		var closestDist = 10000;
+		var topPost;
+		var highestZ = -1000;
 		for(var i = 0; i < res.length; i++) {
-			var xDist = res[0].get('x') - pos.x;
-			var yDist = res[0].get('y') - pos.y;
-			var dist = Math.sqrt(xDist * xDist + yDist * yDist);
-			if(dist < closestDist) {
-				closestDist = dist;
-				closest = res[i];
+			var post = res[i];
+			var postZ = post.view.particle.z;
+			if (postZ > highestZ){
+				topPost = post;
+				highestZ = postZ;
 			}
 		}
-		if(closest) {
+		if(topPost) {
 			//check that it was actually within the element
-			var box = closest.boundingBox;
+			var box = topPost.boundingBox;
 			var inX = pos.x > box.x && pos.x < box.x + box.w * 10;
 			var inY = pos.y > box.y && pos.y < box.y + box.h * 10;
-			closest.clicked(mouseX, mouseY);
-			RING.highlight.position.x = closest.get("x");
-			RING.highlight.position.y = closest.get("y");
-			RING.highlight.scale.x = closest.get("size") * 3;
-			RING.highlight.scale.y = closest.get("size") * 3;
-			if(inX && inY) {
-				console.log("exact click");
-			}
+			topPost.clicked(mouseX, mouseY);
+			RING.highlight.position.x = topPost.get("x");
+			RING.highlight.position.y = topPost.get("y");
+			RING.highlight.scale.x = topPost.get("size") * 2;
+			RING.highlight.scale.y = topPost.get("size") * 2;
 		}
 	}
 

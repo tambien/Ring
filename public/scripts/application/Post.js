@@ -122,9 +122,9 @@ RING.Post = Backbone.Model.extend({
 		}
 	},
 	getSizeFromNoteCount : function() {
-		var count = this.get("note_count") + 1;
+		var count = this.get("note_count")/2 + 1;
 		var size = 0;
-		size = Math.log(count) * 4 + 8;
+		size = Math.log(count) * 5 + 5;
 		this.set("size", size);
 	},
 	moved : function() {

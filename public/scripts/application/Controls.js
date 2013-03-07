@@ -35,9 +35,11 @@ RING.Controls = Backbone.Model.extend({
 		//listen for changes to the tags
 		this.listenTo(this.artistList, "change:checked", this.updateArtists);
 		//update the canvas whenver there is a change
-		this.on("change:startTime", _.throttle(this.render, 1000));
-		this.on("change:endTime", _.throttle(this.render, 1000));
-		this.on("change:reblogLevel", _.throttle(this.render, 1000));
+		this.throttledRender = _.throttle(this.render, 1000)
+		//var throttledRender = _.defer(self.render.bind(self));
+		this.on("change:startTime", this.throttledRender);
+		//this.on("change:endTime", this.throttledRender);
+		this.on("change:reblogLevel", this.throttledRender);
 		//start the rendering when everything is loaded
 		this.on("change:allLoaded", this.allLoaded);
 		//make the views
@@ -93,7 +95,7 @@ RING.Controls = Backbone.Model.extend({
 				this.availableColors.push(removed[0].get("color"));
 			}
 		}
-		this.render();
+		this.throttledRender();
 	},
 	setCollectionColors : function(artist) {
 		//get all of the models that have a particular artist
@@ -133,7 +135,7 @@ RING.Controls = Backbone.Model.extend({
 				setTimeout(function(model) {
 					//set it as  notvisible
 					model.set("visible", false);
-				}, RING.Util.randomInt(0, delayTime), model);
+				}, 0, model);
 				continue;
 			}
 			//check that it's the right time range
@@ -143,7 +145,7 @@ RING.Controls = Backbone.Model.extend({
 			if(!timeMatch) {
 				setTimeout(function(model) {
 					model.set("visible", false);
-				}, RING.Util.randomInt(0, delayTime), model);
+				}, 0, model);
 				continue;
 			}
 			//set it as visible
@@ -151,7 +153,7 @@ RING.Controls = Backbone.Model.extend({
 				model.set("visible", true);
 				//and all it's reblogs
 				model.makeReblogsVisible(reblogLevel);
-			}, RING.Util.randomInt(0, delayTime), model);
+			}, 0, model);
 		};
 		var twitterModels = RING.twitterCollection.models
 		for(var i = 0, len = twitterModels.length; i < len; i++) {
@@ -169,7 +171,7 @@ RING.Controls = Backbone.Model.extend({
 				setTimeout(function(model) {
 					//set it as not visible
 					model.set("visible", false);
-				}, RING.Util.randomInt(0, delayTime), model);
+				}, 0, model);
 				continue;
 			}
 			//check that it's the right time range
@@ -180,13 +182,13 @@ RING.Controls = Backbone.Model.extend({
 				setTimeout(function(model) {
 					//set it as not visible
 					model.set("visible", false);
-				}, RING.Util.randomInt(0, delayTime), model);
+				}, 0, model);
 				continue;
 			}
 			setTimeout(function(model) {
 				//set it as visible
 				model.set("visible", true);
-			}, RING.Util.randomInt(0, delayTime), model);
+			}, 0, model);
 		};
 	},
 	//loads the two emuze things into a special spot
@@ -290,8 +292,8 @@ RING.Controls = Backbone.Model.extend({
 					//for each artist, add it to the twitter and tumblr posts
 					for(var i = 0; i < posts.length; i++) {
 						var post = posts[i];
-						setTimeout(function(post) {
-							self.set("loadingText", "Loading posts from " + post.artist.name);
+						setTimeout(function(post, index) {
+							self.set("loadingText", "Loading aritst " + index + "/14");
 							//add the artist to the list also
 							//make an artist
 							var artist = new RING.Artist(post.artist);
@@ -305,7 +307,7 @@ RING.Controls = Backbone.Model.extend({
 							RING.twitterCollection.addArtist(post);
 							//increment the loading bar
 							self.set("loading", self.get('loading') + 1);
-						}, i * 100, post);
+						}, i * 100, post, i + 1);
 					}
 				},
 				error : function() {
@@ -551,6 +553,7 @@ RING.DatePicker = Backbone.View.extend({
 		}
 	},
 	changeDate : function(event, ui) {
+		//setTimeout(function(self) {
 		var now = new Date();
 		var minDate = new Date(now.getFullYear(), now.getMonth(), parseInt(now.getDate()) + ui.values[0]);
 		if(ui.values[1] === 0) {
@@ -562,7 +565,8 @@ RING.DatePicker = Backbone.View.extend({
 			startTime : minDate,
 			endTime : maxDate,
 		});
-	}
+		//}, 0, this);
+	},
 });
 
 RING.DateIndicator = Backbone.View.extend({
@@ -660,9 +664,9 @@ RING.DateIndicator = Backbone.View.extend({
 				this.$el.find(".tertiary").remove();
 		}
 	},
-	zoom : function(model, zoom){
+	zoom : function(model, zoom) {
 		this.$el.stop().transition({
-			scale : (1000/zoom)*.8,
+			scale : (1000 / zoom) * .8,
 		}, 1200);
 	}
 })
@@ -743,7 +747,7 @@ RING.Search = Backbone.View.extend({
 	},
 
 	initialize : function() {
-		this.$title = $("<div id='title' class='titleText'>SEARCH FOR AN ARTIST</div>").appendTo(this.$el);
+		this.$title = $("<div id='title' class='titleText'>SEARCH FOR AN SXSW ARTIST</div>").appendTo(this.$el);
 		this.$search = $("<input class='titleText' id='search'/>").appendTo(this.$el);
 		this.$button = $("<div class='titleText' id='button'>SEARCH</div>").appendTo(this.$el);
 		this.$el.insertAfter($("#tags"));
@@ -883,14 +887,14 @@ RING.Zoom = Backbone.View.extend({
 	},
 	getZoom : function() {
 		var maxTumblr = RING.tumblrCollection.max(function(model) {
-			if (model.get("visible")){
+			if(model.get("visible")) {
 				return model.get("radius");
 			} else {
 				return 0;
 			}
 			return model.get("x");
 		})
-		var zoom = Math.log(maxTumblr.get("radius")/10)*280;
+		var zoom = Math.log(maxTumblr.get("radius") / 10) * 280;
 		zoom = Math.max(1000, zoom);
 		//var zoom = Math.max(1000, maxTumblr.get("radius") * 2);
 		this.model.set("zoom", zoom);

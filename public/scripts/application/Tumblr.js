@@ -6,13 +6,13 @@
 
 RING.Tumblr = RING.Post.extend({
 
+	//INITIALIZATION///////////////////////////////////////////////////////////
+
 	initialize : function(attributes, options) {
 		this.superInit();
 		this.set("style", RING.Util.choose(['circle_grad', 'circle']))
 		//an array to store all the reblogs
 		this.reblogs = [];
-		//move the reblogs when the origin is moved
-		//this.on("change:theta", this.repositionReblogs);
 		//resize if it's a reblog
 		if(this.get("reblogged_from")) {
 			this.set("size", this.get("size") / 2);
@@ -21,7 +21,6 @@ RING.Tumblr = RING.Post.extend({
 		this.view = new RING.Tumblr.View({
 			model : this,
 		});
-		//this.listenTo(RING.controls, "change:reblogLevel", this.changeReblogLevel);
 	},
 	//called when all of the posts are loaded in the collection
 	allLoaded : function() {
@@ -36,6 +35,7 @@ RING.Tumblr = RING.Post.extend({
 		if(this.origin) {
 			//listen to the reblogged_from post to set the visibility
 			this.listenTo(this.origin, "change:visible", this.originVisibility);
+			//this.listenTo(RING.controls, "change:reblogLevel", this.changeReblogLevel);
 		} else {
 			//move the origin when the time changes
 			this.listenTo(RING.controls, "change:startTime", this.getPositionFromTime);
@@ -51,9 +51,6 @@ RING.Tumblr = RING.Post.extend({
 		this.systemNodesTween = [];
 		this.on("change:x", _.throttle(this.moveStartLine, 100));
 		this.on("change:y", _.throttle(this.moveStartLine, 100));
-		//this.on("change:x", _.throttle(this.moveLine, 100));
-		//this.on("change:y", _.throttle(this.moveLine, 100));
-
 	},
 	//second pass at loading things
 	allLoaded2 : function() {
@@ -74,6 +71,7 @@ RING.Tumblr = RING.Post.extend({
 			//this.view.drawEdgeToOrigin();
 		}
 	},
+	//VISIBILITY///////////////////////////////////////////////////////////////
 	originVisibility : function(model, visible) {
 		//if the origin isn't visible, neither should this
 		if(!visible) {
@@ -81,6 +79,34 @@ RING.Tumblr = RING.Post.extend({
 		}
 		//this.lineVisible(model, visible);
 	},
+	changeReblogLevel : function(model, reblogLevel) {
+		if(this.origin.get("visible")) {
+			if(this.get("reblog_level") <= reblogLevel) {
+				reblog.set("visible", true);
+			} else {
+				reblog.set("visible", false);
+			}
+		}
+	},
+	makeReblogsVisible : function(level) {
+		_.forEach(this.reblogs, function(reblog, index) {
+			if(reblog.get('reblog_level') <= level) {
+				reblog.set("visible", true);
+				reblog.makeReblogsVisible(level);
+			} else {
+				reblog.set("visible", false);
+			}
+		});
+	},
+	makeReblogsInvisible : function(model, visible) {
+		if(!visible) {
+			_.forEach(model.reblogs, function(reblog, index) {
+				reblog.set("visible", false);
+				reblog.makeReblogsInvisible(reblog, visible);
+			});
+		}
+	},
+	//REBLOG LEVEL/////////////////////////////////////////////////////////////
 	changeReblogLevel : function(model, reblogLevel) {
 		var origin = this.origin;
 		if(origin) {
@@ -145,6 +171,7 @@ RING.Tumblr = RING.Post.extend({
 			reblog.positionReblogs();
 		}
 	},
+	//POSITION AND MOVEMENT////////////////////////////////////////////////////
 	//when the theta changes, move everything by that amount
 	thetaChange : function(model, theta) {
 		//this.positionReblogs();
@@ -273,24 +300,6 @@ RING.Tumblr = RING.Post.extend({
 			this.view.line.geometry.verticesNeedUpdate = true;
 		}
 	},
-	makeReblogsVisible : function(level) {
-		_.forEach(this.reblogs, function(reblog, index) {
-			if(reblog.get('reblog_level') <= level) {
-				reblog.set("visible", true);
-				reblog.makeReblogsVisible(level);
-			} else {
-				reblog.set("visible", false);
-			}
-		});
-	},
-	makeReblogsInvisible : function(model, visible) {
-		if(!visible) {
-			_.forEach(model.reblogs, function(reblog, index) {
-				reblog.set("visible", false);
-				reblog.makeReblogsInvisible(reblog, visible);
-			});
-		}
-	},
 });
 
 //cache the line material
@@ -309,14 +318,14 @@ RING.Tumblr.View = RING.Post.View.extend({
 	},
 	//animate the entrance and exit of lines
 	lineVisible : function(model, visible) {
-		if(this.line) {
-			var originX = model.origin.get("x");
-			var originY = model.origin.get("y");
-			if(visible) {
-				if(this.lineTimeout) {
-					clearTimeout(this.lineTimeout);
-				}
-				this.lineTimeout = setTimeout(function(self, model) {
+		if(this.lineTimeout) {
+			clearTimeout(this.lineTimeout);
+		}
+		this.lineTimeout = setTimeout(function(self, model) {
+			if(self.line) {
+				var originX = model.origin.get("x");
+				var originY = model.origin.get("y");
+				if(visible) {
 					RING.scene.add(self.line);
 					//make the lines come from the origin node
 
@@ -349,13 +358,18 @@ RING.Tumblr.View = RING.Post.View.extend({
 							}
 						}(node, self)).start();
 					}
-				}, 800, this, model);
-			} else {
-				//make the lines fly out
+				} else {
+					//make the lines fly out
+					RING.scene.remove(self.line);
+				}
+			}
+		}, 800, this, model);
+		//should be removed instantly
+		if (this.line) {
+			if (!visible){
 				RING.scene.remove(this.line);
 			}
 		}
-
 	},
 	createElement : function() {
 		this.$container.html(" ");
