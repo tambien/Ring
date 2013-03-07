@@ -28,18 +28,10 @@ RING.Post = Backbone.Model.extend({
 	},
 
 	superInit : function(attributes, options) {
-		//movement/position
-		this.on("change:x", _.throttle(this.moved, 500));
-		this.on("change:y", _.throttle(this.moved, 500));
 		//set the radius initially
 		this.set("radius", RING.Util.randomFloat(350, 420));
-
-		//visibility
-		this.on("change:visible", this.changeVisible);
 		//calculate the position
 		this.getSizeFromNoteCount();
-		this.setBoundingBox();
-		//this.getPositionFromTime();
 		//the cid
 		this.cid = this.get("id");
 	},
@@ -50,31 +42,6 @@ RING.Post = Backbone.Model.extend({
 	//called when a model is removed from the collection
 	remove : function() {
 		this.view.remove();
-		if(this.boundingBox) {
-			//remove the previous object from the rtree
-			RING.rtree.remove(this.boundingBox, this);
-		}
-	},
-	setBoundingBox : function() {
-		var size = this.get("size");
-		var x = this.get("x");
-		var y = this.get("y");
-		this.boundingBox = {
-			x : x - (size / 2),
-			y : y - (size / 2),
-			w : size,
-			h : size,
-		}
-	},
-	updateRTreePosition : function() {
-		if(this.get('visible')) {
-			if(this.boundingBox) {
-				//remove the previous object from the rtree
-				RING.rtree.remove(this.boundingBox, this);
-			}
-			this.setBoundingBox();
-			RING.rtree.insert(this.boundingBox, this);
-		}
 	},
 	getInitialPosition : function() {
 		//the 360 degrees is from the startTime to the endTime
@@ -127,34 +94,10 @@ RING.Post = Backbone.Model.extend({
 		size = Math.log(count) * 20 + 5;
 		this.set("size", size);
 	},
-	moved : function() {
-		//it woul be cool to do a tween here
-		//var x = this.get("x");
-		//var y = this.get("y");
-		//this.setTheta(x, y);
-		//update the rtree position
-		this.updateRTreePosition();
-	},
 	setTheta : function(x, y) {
 		this.theta = Math.atan2(y, x);
 		this.set("theta", this.theta);
 		this.set("radius", Math.sqrt(x * x + y * y));
-	},
-	changeVisible : function(model, visible) {
-		if(visible) {
-			//move it to the correct spot
-			//this.getPositionFromTime();
-			//add it to the rtree
-			this.setBoundingBox();
-			RING.rtree.insert(this.boundingBox, this);
-		} else {
-			//otherwise remove it from the rtree
-			if(this.boundingBox) {
-				//remove the previous object from the rtree
-				RING.rtree.remove(this.boundingBox, this);
-			}
-
-		}
 	},
 	clicked : function(x, y) {
 		//position the element relative to the click
@@ -163,9 +106,6 @@ RING.Post = Backbone.Model.extend({
 		this.view.positionElement(x, y);
 		//console.log(this);
 	}, 
-	addHighlight : function(){
-		
-	}
 });
 
 RING.Post.View = Backbone.View.extend({
@@ -174,8 +114,9 @@ RING.Post.View = Backbone.View.extend({
 
 	superInit : function() {
 		//trigger callbacks on repositioning
-		this.listenTo(this.model, "change:x", _.throttle(this.position, 500));
-		this.listenTo(this.model, "change:y", _.throttle(this.position, 500));
+		var throttledPosition = _.throttle(this.position, 500);
+		this.listenTo(this.model, "change:x", throttledPosition);
+		this.listenTo(this.model, "change:y", throttledPosition);
 		this.listenTo(this.model, "change:color", this.setColor);
 		this.listenTo(this.model, "change:size", this.setSize);
 		this.listenTo(this.model, "change:visible", this.setVisible);

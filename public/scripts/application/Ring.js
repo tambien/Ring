@@ -11,8 +11,6 @@ var RING = function() {
 
 	var $container;
 
-	var rtree = new RTree(10);
-
 	//INITIALIZATION///////////////////////////////////////////////////////////
 
 	function initialize() {
@@ -196,36 +194,6 @@ var RING = function() {
 			RING.highlight.scale.x = closestModel.get("size") * 1.6;
 			RING.highlight.scale.y = closestModel.get("size") * 1.6;
 		}
-		/*
-
-		 var width = 2;
-		 var res = rtree.search({
-		 x : pos.x - width,
-		 y : pos.y - width,
-		 w : width * 2,
-		 h : width * 2,
-		 })
-		 //get the post which is closest to the center of the mouse and has the highest z axis
-		 //go throgh and get only the points that are on top
-		 var topPost;
-		 var highestZ = -1000;
-		 for(var i = 0; i < res.length; i++) {
-		 var post = res[i];
-		 var postZ = post.view.particle.z;
-		 if (postZ > highestZ){
-		 topPost = post;
-		 highestZ = postZ;
-		 }
-		 }
-		 if(topPost) {
-		 //check that it was actually within the element
-		 var box = topPost.boundingBox;
-		 var inX = pos.x > box.x && pos.x < box.x + box.w * 10;
-		 var inY = pos.y > box.y && pos.y < box.y + box.h * 10;
-		 topPost.clicked(mouseX, mouseY);
-
-		 }
-		 */
 	}
 
 	//DRAW LOOP//////////////////////////////////////////////////////////////////
@@ -259,7 +227,6 @@ var RING = function() {
 
 	return {
 		initialize : initialize,
-		rtree : rtree,
 		loaded : loaded,
 		pause : pause,
 		start : start,
