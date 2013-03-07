@@ -227,7 +227,8 @@ RING.Particles = function() {
 			default:
 				return;
 		}
-		var easing = model.get("reblog_level") > 0 ? TWEEN.Easing.Elastic.Out : TWEEN.Easing.Linear.None;
+		//var easing = model.get("reblog_level") > 0 ? TWEEN.Easing.Elastic.Out : TWEEN.Easing.Linear.None;
+		var easing = TWEEN.Easing.Linear.None;
 		var tween = new TWEEN.Tween({
 			x : system.geometry.vertices[index].x,
 			y : system.geometry.vertices[index].y,

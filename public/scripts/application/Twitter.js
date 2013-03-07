@@ -21,6 +21,9 @@ RING.Twitter = RING.Post.extend({
 	},
 	allLoaded : function() {
 		this.superLoaded();
+		//get the handle
+		var handle = RING.controls.artistList.getHandle(this.get('artist'));
+		this.set("handle", handle);
 	}
 });
 
@@ -31,10 +34,11 @@ RING.Twitter.View = RING.Post.View.extend({
 		//this.createElement();
 	},
 	createElement : function() {
-		var handle = RING.controls.artistList.getHandle(this.model.get("artist"));
-		this.$title = $("<div id='title'> @" + handle + "</div>").appendTo(this.$el);
+		this.$container.html(" ")
+		this.$title = $("<div id='title'>posted by <span class='yellow'>@" + this.model.get('handle') + "</span></div>").appendTo(this.$container);
 		var text = this.model.get("text");
-		this.$text = $("<div id='text'>" + text + "</div>").appendTo(this.$el);
-		this.$notes = $("<div id='reblogs'>retweets: " + this.model.get("note_count") + "</div>").appendTo(this.$el);
+		this.$text = $("<div id='tweet'>" + text + "</div>").appendTo(this.$container);
+		this.$notes = $("<div id='note_count'>retweets: <span class='yellow'>" + this.model.get("note_count") + "</span></div>").appendTo(this.$container);
+		this.$artists = $("<div id='artist'><span class='yellow'>#" + this.model.get("artist") + "</span></div>").appendTo(this.$container);
 	},
 });

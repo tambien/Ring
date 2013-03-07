@@ -21,6 +21,7 @@ var RING = function() {
 		//setup the rendering context
 		setupTHREE();
 		//addOctagon();
+		makeSprite();
 		setupStats();
 		//bind the basic events
 		bindEvents();
@@ -94,6 +95,23 @@ var RING = function() {
 		RING.scene.add(octogon);
 	}
 
+	//this is the little ring that goes around selected objects
+	function makeSprite() {
+		var image = THREE.ImageUtils.loadTexture("./images/Yellow_Outline.png");
+		var material = new THREE.SpriteMaterial({
+			map : image,
+			useScreenCoordinates : false,
+			color : 0xffffff
+		});
+		RING.highlight = new THREE.Sprite(material);
+		RING.highlight.position.x = -10000;
+		RING.highlight.position.y = -10000;
+		RING.highlight.position.z = 2;
+		RING.highlight.scale.x = 10;
+		RING.highlight.scale.y = 10;
+		RING.scene.add(RING.highlight);
+	}
+
 	var stats;
 
 	function setupStats() {
@@ -121,6 +139,8 @@ var RING = function() {
 		}
 		//remove any other post displays
 		$(".post").remove();
+		RING.highlight.position.x = -10000;
+		RING.highlight.position.y = -10000;
 		//find the new object
 		var mouseX = event.offsetX;
 		var mouseY = event.offsetY;
@@ -156,6 +176,10 @@ var RING = function() {
 			var inX = pos.x > box.x && pos.x < box.x + box.w * 10;
 			var inY = pos.y > box.y && pos.y < box.y + box.h * 10;
 			closest.clicked(mouseX, mouseY);
+			RING.highlight.position.x = closest.get("x");
+			RING.highlight.position.y = closest.get("y");
+			RING.highlight.scale.x = closest.get("size") * 3;
+			RING.highlight.scale.y = closest.get("size") * 3;
 			if(inX && inY) {
 				console.log("exact click");
 			}
@@ -163,7 +187,7 @@ var RING = function() {
 	}
 
 	//DRAW LOOP//////////////////////////////////////////////////////////////////
-	
+
 	var paused = true;
 
 	function pause() {

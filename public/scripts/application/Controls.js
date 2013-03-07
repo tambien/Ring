@@ -9,7 +9,7 @@ RING.Controls = Backbone.Model.extend({
 		//the start of SXSW
 		"startTime" : new Date(new Date().getFullYear(), new Date().getMonth(), parseInt(new Date().getDate()) - 3),
 		//right now
-		"endTime" : new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()),
+		"endTime" : new Date(),
 		//primary/reblogs/reblogs of reblogs
 		"reblogLevel" : 1,
 		//expanded view
@@ -201,6 +201,16 @@ RING.Controls = Backbone.Model.extend({
 				response = response.posts[0];
 				self.set("loading", self.get('loading') + 1);
 				if(response.artist !== null) {
+					//make an artist
+					var artist = new RING.Artist(response.artist);
+					//add that artist to the collection
+					self.artistList.add(artist, {
+						merge : false,
+						silent : true,
+					});
+					//put the artist in a special box
+					artist.set("eMuze", true);
+					artist.set("visible", true);
 					//update the tumblr and twitter collections with the results
 					RING.tumblrCollection.add(response.tumblr, {
 						merge : false,
@@ -212,16 +222,6 @@ RING.Controls = Backbone.Model.extend({
 					//need to do this just on the new artists
 					RING.tumblrCollection.loadArtist(response.artist.name);
 					RING.twitterCollection.loadArtist(response.artist.name);
-					//make an artist
-					var artist = new RING.Artist(response.artist);
-					//add that artist to the collection
-					self.artistList.add(artist, {
-						merge : false,
-						silent : true,
-					});
-					//put the artist in a special box
-					artist.set("eMuze", true);
-					artist.set("visible", true);
 
 					callback();
 				}
@@ -240,6 +240,16 @@ RING.Controls = Backbone.Model.extend({
 				response = response.posts[0];
 				self.set("loading", self.get('loading') + 1);
 				if(response.artist !== null) {
+					//make an artist
+					var artist = new RING.Artist(response.artist);
+					//add that artist to the collection
+					self.artistList.add(artist, {
+						merge : false,
+						silent : true,
+					});
+					//put the artist in a special box
+					artist.set("eMuze", true);
+					artist.set("visible", true);
 					//update the tumblr and twitter collections with the results
 					RING.tumblrCollection.add(response.tumblr, {
 						merge : false,
@@ -251,16 +261,6 @@ RING.Controls = Backbone.Model.extend({
 					//need to do this just on the new artists
 					RING.tumblrCollection.loadArtist(response.artist.name);
 					RING.twitterCollection.loadArtist(response.artist.name);
-					//make an artist
-					var artist = new RING.Artist(response.artist);
-					//add that artist to the collection
-					self.artistList.add(artist, {
-						merge : false,
-						silent : true,
-					});
-					//put the artist in a special box
-					artist.set("eMuze", true);
-					artist.set("visible", true);
 
 					callback();
 				}
@@ -288,8 +288,6 @@ RING.Controls = Backbone.Model.extend({
 						var post = posts[i];
 						setTimeout(function(post) {
 							self.set("loadingText", "Loading posts from " + post.artist.name);
-							RING.tumblrCollection.addArtist(post);
-							RING.twitterCollection.addArtist(post);
 							//add the artist to the list also
 							//make an artist
 							var artist = new RING.Artist(post.artist);
@@ -299,6 +297,8 @@ RING.Controls = Backbone.Model.extend({
 								silent : true,
 							});
 							artist.set("visible", true);
+							RING.tumblrCollection.addArtist(post);
+							RING.twitterCollection.addArtist(post);
 							//increment the loading bar
 							self.set("loading", self.get('loading') + 1);
 						}, i * 100, post);
@@ -318,6 +318,12 @@ RING.Controls = Backbone.Model.extend({
 		$.ajax(reqString, {
 			success : function(response) {
 				if(response.artist !== null) {
+					//make an artist
+					var artist = new RING.Artist(response.artist);
+					//add that artist to the collection
+					self.model.artistList.add(artist, {
+						merge : false,
+					});
 					//update the tumblr and twitter collections with the results
 					RING.tumblrCollection.add(response.tumblr, {
 						merge : false,
@@ -329,12 +335,6 @@ RING.Controls = Backbone.Model.extend({
 					//need to do this just on the new artists
 					RING.tumblrCollection.loadArtist(artistName);
 					RING.twitterCollection.loadArtist(artistName);
-					//make an artist
-					var artist = new RING.Artist(response.artist);
-					//add that artist to the collection
-					self.model.artistList.add(artist, {
-						merge : false,
-					});
 					callback();
 					//check that artist
 					//artist.set("checked", true);
@@ -556,7 +556,11 @@ RING.DatePicker = Backbone.View.extend({
 	changeDate : function(event, ui) {
 		var now = new Date();
 		var minDate = new Date(now.getFullYear(), now.getMonth(), parseInt(now.getDate()) + ui.values[0]);
-		var maxDate = new Date(now.getFullYear(), now.getMonth(), parseInt(now.getDate()) + ui.values[1]);
+		if(ui.values[1] === 0) {
+			var maxDate = new Date();
+		} else {
+			var maxDate = new Date(now.getFullYear(), now.getMonth(), parseInt(now.getDate()) + ui.values[1]);
+		}
 		this.model.set({
 			startTime : minDate,
 			endTime : maxDate,
@@ -571,7 +575,10 @@ RING.DateIndicator = Backbone.View.extend({
 	initialize : function() {
 		//add five dates to the canvas
 		this.$dates = [];
-		for(var i = 0; i < 4; i++) {
+		for(var i = 0; i < 5; i++) {
+			var date = $("<div class='dateNumber date'>3/4</div>").appendTo(this.$el);
+			var date = $("<div class='dateNumber '>3</div>").appendTo(this.$el);
+			var date = $("<div class='dateNumber'>0</div>").appendTo(this.$el);
 			var date = $("<div class='dateNumber'>0</div>").appendTo(this.$el);
 			this.$dates.push(date);
 		}
@@ -585,72 +592,75 @@ RING.DateIndicator = Backbone.View.extend({
 		this.listenTo(this.model, "change:endTime", this.render)
 	},
 	render : function(model) {
+		this.$el.html(" ");
 		//how many days between the start and end time?
 		var startTime = this.model.get("startTime");
 		var endTime = this.model.get("endTime");
 		var diff = endTime - startTime;
 		var dayInMS = 60 * 1000 * 60 * 24;
-
 		var days = diff / dayInMS;
-		
-		var radius = 330;
 
-		//if there are more than two days
-		//just show the month/day
-		if(days > 2) {
-			for(var i = 0; i < this.$dates.length; i++) {
-				var date = this.$dates[i];
-				if(i < days) {
-					var d = parseInt(startTime.getDate()) + i;
-					var m = parseInt(startTime.getMonth()) + 1;
-					date.html(m + "/" + d);
-					//position the date around the circle
-					var theta = (i / days) * Math.PI * 2 - Math.PI / 2;
-					var top = radius * Math.sin(theta) + 350;
-					var left = radius * Math.cos(theta) + 350;
-					date.transition({
-						top : top,
-						left : left,
-					}, 500);
-				} else {
-					date.transition({
-						top : -100,
-						left : 350,
-					}, 500);
-				}
-			}
+		//8 segments per day
+
+		if(days < 1) {
+			var segmentCount = Math.ceil(days * 8);
 		} else {
-			//otherwise, show the date and 12pm.
-			for(var i = 0; i < this.$dates.length; i++) {
-				var date = this.$dates[i];
-				if(i < days * 2) {
-					//if it's even show the month
-					if(i % 2 === 0) {
-						var d = parseInt(startTime.getDate()) + i / 2;
-						var m = parseInt(startTime.getMonth()) + 1;
-						date.html(m + "/" + d);
-					} else {
-						//show the hour
-						date.html("12pm");
-					}
-					//position the date around the circle
-					var halfDays = days * 2;
-					var theta = (i / halfDays) * Math.PI * 2 - Math.PI / 2;
-					var top = radius * Math.sin(theta) + 350;
-					var left = radius * Math.cos(theta) + 350;
-					date.transition({
-						top : top,
-						left : left,
-					}, 500);
-				} else {
-					date.transition({
-						top : -100,
-						left : 350,
-					}, 500);
-				}
-			}
+			var segmentCount = Math.floor(days) * 8;
 		}
 
+		for(var i = 0; i < segmentCount; i++) {
+			//make the segments for each of the days
+			var date;
+			switch(i % 8) {
+				case 0:
+					//the date
+					var d = parseInt(startTime.getDate()) + i / 8;
+					var m = parseInt(startTime.getMonth()) + 1;
+					date = $("<div class='dateNumber date'>" + m + "/" + d + "</div>").appendTo(this.$el);
+					break;
+				case 1 :
+					date = $("<div class='dateNumber tertiary'>3a</div>").appendTo(this.$el);
+					break;
+				case 2 :
+					date = $("<div class='dateNumber secondary'>6a</div>").appendTo(this.$el);
+					break;
+				case 3 :
+					date = $("<div class='dateNumber tertiary'>9a</div>").appendTo(this.$el);
+					break;
+				case 4 :
+					date = $("<div class='dateNumber primary'>12p</div>").appendTo(this.$el);
+					break;
+				case 5 :
+					date = $("<div class='dateNumber tertiary'>3p</div>").appendTo(this.$el);
+					break;
+				case 6 :
+					date = $("<div class='dateNumber secondary'>6p</div>").appendTo(this.$el);
+					break;
+				case 7 :
+					date = $("<div class='dateNumber tertiary'>9p</div>").appendTo(this.$el);
+					break;
+			}
+			//position the date around the circle
+			var radius = 180;
+			var theta = (i / segmentCount) * Math.PI * 2 - Math.PI / 2;
+			var top = radius * Math.sin(theta) + 350;
+			var left = radius * Math.cos(theta) + 350;
+			//animate the movement
+			date.css({
+				top : top,
+				left : left,
+			});
+		}
+		//include numbers at certain densities.
+		//let it fall through to remove things at all levels
+		switch(Math.floor(days)) {
+			case 4 :
+				this.$el.find(".primary").remove();
+			case 3 :
+				this.$el.find(".secondary").remove();
+			case 2:
+				this.$el.find(".tertiary").remove();
+		}
 	},
 	setDate : function(element, date) {
 		if(date.getTime()) {

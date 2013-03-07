@@ -162,6 +162,9 @@ RING.Post = Backbone.Model.extend({
 		this.view.$el.appendTo($("#container"));
 		this.view.positionElement(x, y);
 		//console.log(this);
+	}, 
+	addHighlight : function(){
+		
 	}
 });
 
@@ -180,7 +183,8 @@ RING.Post.View = Backbone.View.extend({
 		this.particle = RING.Particles.get(this.model);
 		RING.Particles.updateSize(this.model);
 		//set the posiiton initially
-		//this.position();
+		//make the contianer
+		this.$container = $("<div class='container'></div>").appendTo(this.$el);
 	},
 	createElement : function() {
 
@@ -205,34 +209,65 @@ RING.Post.View = Backbone.View.extend({
 	},
 	setVisible : function(model, visible) {
 		var self = this;
-		setTimeout(function(model) {
-			//just move it off the screen to make it invisible
-			if(visible) {
-				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") + 1, {
-					silent : false,
-				})
-				RING.Particles.positionInstant(model, model.get("x") > 0 ? 1000 : -1000,  model.get("y") > 0 ? 1000 : -1000);
-				self.position(model, model.get("x"), model.get("y"));
-			} else {
-				RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") - 1, {
-					silent : false,
-				})
-				RING.Particles.position(model, model.get("x") > 0 ? 1000 : -1000,  model.get("y") > 0 ? 1000 : -1000);
-			}
-		}, RING.Util.randomInt(0, 600), model);
+		//setTimeout(function(model) {
+		//just move it off the screen to make it invisible
+		if(visible) {
+			RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") + 1, {
+				silent : false,
+			})
+			RING.Particles.positionInstant(model, model.get("x") > 0 ? 1000 : -1000, model.get("y") > 0 ? 1000 : -1000);
+			self.position(model, model.get("x"), model.get("y"));
+		} else {
+			RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") - 1, {
+				silent : false,
+			})
+			RING.Particles.position(model, model.get("x") > 0 ? 1000 : -1000, model.get("y") > 0 ? 1000 : -1000);
+		}
+		//}, RING.Util.randomInt(0, 600), model);
 	},
 	positionElement : function(x, y) {
-		var css = {	};
-		if(this.model.get("x") > 0) {
-			css.left = RING.Util.toInt(x) - 250;
-		} else {
-			css.left = RING.Util.toInt(x);
+		var elCss = {	};
+		var containerCss = {};
+		//remove all of the classes
+		this.$container.find(".pointer").remove();
+		var posX = this.model.get("x");
+		var posY = this.model.get("y");
+		var paddingSide = "0px"
+		var paddingTop = "0px"
+		if(posX > 0 && posY > 0) {
+			elCss.left = RING.Util.toInt(x) - 280;
+			elCss.top = RING.Util.toInt(y);
+			containerCss.right = paddingSide;
+			containerCss.top = paddingTop;
+			containerCss.left = "";
+			containerCss.bottom = "";
+			$(".top_right").clone().appendTo(this.$el);
+		} else if(posX > 0 && posY < 0) {
+			elCss.left = RING.Util.toInt(x) - 280;
+			elCss.top = RING.Util.toInt(y) - 500;
+			containerCss.right = paddingSide;
+			containerCss.bottom = paddingTop;
+			containerCss.top = "";
+			containerCss.left = "";
+			$(".bottom_right").clone().appendTo(this.$el);
+		} else if(posX < 0 && posY > 0) {
+			elCss.left = RING.Util.toInt(x);
+			elCss.top = RING.Util.toInt(y);
+			containerCss.left = paddingSide;
+			containerCss.top = paddingTop;
+			containerCss.top = "";
+			containerCss.right = "";
+			$(".top_left").clone().appendTo(this.$el);
+		} else if(posX < 0 && posY < 0) {
+			elCss.left = RING.Util.toInt(x);
+			elCss.top = RING.Util.toInt(y) - 500;
+			containerCss.bottom = paddingTop;
+			containerCss.left = paddingSide;
+			containerCss.right = "";
+			containerCss.top = "";
+			$(".bottom_left").clone().appendTo(this.$el);
 		}
-		if(this.model.get("y") > 0) {
-			css.top = RING.Util.toInt(y);
-		} else {
-			css.top = RING.Util.toInt(y) - 250;
-		}
-		this.$el.css(css);
+		this.$el.css(elCss);
+		this.$container.css(containerCss);
 	}
 })

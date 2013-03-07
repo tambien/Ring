@@ -149,7 +149,11 @@ RING.Tumblr = RING.Post.extend({
 	thetaChange : function(model, theta) {
 		//this.positionReblogs();
 		var diff = theta - this.previous("theta");
+		//this.view.lineVisible(this, false);
 		this.repositionReblogs(diff);
+		//setTimeout(function(self){
+		//	self.view.lineVisible(self, true);
+		//}, 800, this);
 	},
 	moveStartLine : function() {
 		var x = this.get("x");
@@ -259,9 +263,8 @@ RING.Tumblr = RING.Post.extend({
 					}
 				}
 			}(node, view)).start();
-
-			//node.setX(newX);
-			//node.setY(newY);
+			//node.v.setX(newX);
+			//node.v.setY(newY);
 		}
 		//move the vertices
 		if(this.view.line) {
@@ -308,38 +311,43 @@ RING.Tumblr.View = RING.Post.View.extend({
 			var originX = model.origin.get("x");
 			var originY = model.origin.get("y");
 			if(visible) {
-				RING.scene.add(this.line);
-				//make the lines come from the origin node
-				
-				for(var i = 0; i < model.systemNodes.length; i++) {
-					var node = model.systemNodes[i];
-					//make each of the lines start at the origin, and reach towards their final position
-					//calculate final position
-					var x = node.r * Math.cos(node.t);
-					var y = node.r * Math.sin(node.t);
-					//set the vertex to the origin
-					node.v.x = originX;
-					node.v.y = originY;
-					if(this.lineVisibleTween) {
-						this.lineVisibleTween.stop();
-					}
-					this.lineVisibleTween = new TWEEN.Tween({
-						x : originX,
-						y : originY,
-					}).to({
-						x : x,
-						y : y
-					}, 500).easing(TWEEN.Easing.Elastic.Out).onUpdate( function(node, view) {
-						return function() {
-							//set the value
-							node.v.setX(this.x);
-							node.v.setY(this.y);
-							if(view.line) {
-								view.line.geometry.verticesNeedUpdate = true;
-							}
-						}
-					}(node, this)).start();
+				if(this.lineTimeout) {
+					clearTimeout(this.lineTimeout);
 				}
+				this.lineTimeout = setTimeout(function(self, model) {
+					RING.scene.add(self.line);
+					//make the lines come from the origin node
+
+					for(var i = 0; i < model.systemNodes.length; i++) {
+						var node = model.systemNodes[i];
+						//make each of the lines start at the origin, and reach towards their final position
+						//calculate final position
+						var x = node.r * Math.cos(node.t);
+						var y = node.r * Math.sin(node.t);
+						//set the vertex to the origin
+						node.v.x = originX;
+						node.v.y = originY;
+						if(self.lineVisibleTween) {
+							self.lineVisibleTween.stop();
+						}
+						self.lineVisibleTween = new TWEEN.Tween({
+							x : originX,
+							y : originY,
+						}).to({
+							x : x,
+							y : y
+						}, 500).easing(TWEEN.Easing.Elastic.Out).onUpdate( function(node, view) {
+							return function() {
+								//set the value
+								node.v.setX(this.x);
+								node.v.setY(this.y);
+								if(view.line) {
+									view.line.geometry.verticesNeedUpdate = true;
+								}
+							}
+						}(node, self)).start();
+					}
+				}, 800, this, model);
 			} else {
 				//make the lines fly out
 				RING.scene.remove(this.line);
@@ -348,26 +356,30 @@ RING.Tumblr.View = RING.Post.View.extend({
 
 	},
 	createElement : function() {
-		this.$el.html(" ");
-		this.$title = $("<div id='title'>" + this.model.get("blog_name") + "</div>").appendTo(this.$el);
+		this.$container.html(" ");
+		this.$title = $("<div id='title'>posted in <span class='yellow'>" + this.model.get("blog_name") + "</span></div>").appendTo(this.$container);
+		this.$reblogCount = $("<div id='reblog_count'>reblogged <span class='yellow'>" + this.model.reblogs.length + "</span> times</div>").appendTo(this.$container);
 		var text = this.model.get("text");
 		if(text.length > 500) {
 			text = text.slice(0, 498);
 			text += "...";
 		}
-		this.$text = $("<div id='text'>" + text + "</div>").appendTo(this.$el);
 		var photo = this.model.get("photo");
 		if(photo !== "") {
 			var self = this;
-			this.$photo = $("<img />").attr('src', photo).load(function() {
+			this.$photo = $("<img id='photo'/>").attr('src', photo).load(function() {
 				if(!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
 					alert('broken image!');
 				} else {
-					self.$el.append(self.$photo);
+					//self.$container.append(self.$photo);
 				}
-			});
+			}).appendTo(this.$container);
 		}
-		this.$notes = $("<div id='reblogs'>notes: " + this.model.get("note_count") + "</div>").appendTo(this.$el);
+		if(text !== "") {
+			this.$text = $("<div id='text'>" + text + "</div>").appendTo(this.$container);
+		}
+		this.$notes = $("<div id='note_count'>notes: <span class='yellow'>" + this.model.get("note_count") + "</span></div>").appendTo(this.$container);
+		this.$artists = $("<div id='artist'><span class='yellow'>#" + this.model.get("artist") + "</span></div>").appendTo(this.$container);
 	},
 	//draw edges to the connected reposts
 	drawEdgeToOrigin : function() {

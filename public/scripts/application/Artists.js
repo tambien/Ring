@@ -146,6 +146,17 @@ RING.Artists = Backbone.Collection.extend({
 			this.remove(remove);
 		}
 	},
+	clearSearches : function() {
+		for(var i = 0; i < this.searches.length; i++) {
+			var search = this.searches[i];
+			search.set({
+				visible : false,
+				checked : false,
+			});
+			this.remove(search);
+		}
+		this.searches = [];
+	},
 	//get the color of an artist
 	getColor : function(artist) {
 
@@ -154,6 +165,7 @@ RING.Artists = Backbone.Collection.extend({
 	getHandle : function(artist) {
 		var item = this.where({
 			name : artist,
-		})
+		});
+		return item[0].get("handle");
 	}
 });

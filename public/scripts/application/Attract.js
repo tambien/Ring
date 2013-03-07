@@ -16,6 +16,7 @@ RING.AttractMode = Backbone.Model.extend({
 		RING.$container.mousemove(this.touched.bind(this));
 		//change into / out of attract mode
 		this.on("change:attractMode", this.changeAttract);
+		this.on("change:lastTouch", this.testAttractMode);
 		this.listenTo(RING.controls, "change:allLoaded", this.allLoaded);
 	},
 	//updates the last touched time
@@ -31,7 +32,7 @@ RING.AttractMode = Backbone.Model.extend({
 		var lastTouch = this.get("lastTouch");
 		var now = new Date();
 		//start when it hasn't been touched for a minute
-		if(now - lastTouch > 30000) {
+		if(now - lastTouch > 60000) {
 			this.set("attractMode", true);
 		} else {
 			this.set("attractMode", false);
@@ -39,12 +40,14 @@ RING.AttractMode = Backbone.Model.extend({
 	},
 	changeAttract : function(model, attractMode) {
 		RING.controls.set("expanded", true);
+		//clear the searches after a minute
+		RING.controls.artistList.clearSearches();
 		this.attract();
 	},
 	attract : function() {
 		//remove any post displays
-		$(".post").remove();
 		if(this.get("attractMode")) {
+			$(".post").remove();
 			//pick a random action
 			var actions = [this.changeTime, this.changeArtist, this.showPopOver, this.showPopOver, this.showPopOver, this.showPopOver, this.changeReblogLevel];
 			//pick a random action
