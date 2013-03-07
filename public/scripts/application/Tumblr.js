@@ -305,7 +305,7 @@ RING.Tumblr = RING.Post.extend({
 //cache the line material
 RING.Tumblr.lineMaterial = new THREE.LineBasicMaterial({
 	color : 0xfffffff,
-	opacity : 0.5,
+	opacity : 0.2,
 	linewidth : .5,
 	transparent : true
 })
