@@ -14,23 +14,55 @@ var RING = function() {
 	//INITIALIZATION///////////////////////////////////////////////////////////
 
 	function initialize() {
+		//check if it's the installation version and set the flag
+		if(window.location.hash === "#installation") {
+			RING.installation = true;
+			RING.artistCount = 26;
+		} else {
+			RING.installation = false;
+			RING.artistCount = 14;
+		}
+		//set the container
 		$container = $("#container");
 		RING.$container = $container;
 		//setup the rendering context
-		setupTHREE();
-		//addOctagon();
-		makeSprite();
-		setupStats();
-		//bind the basic events
-		bindEvents();
-		//make the tumblr collection
-		RING.tumblrCollection = new RING.TumblrCollection();
-		RING.twitterCollection = new RING.TwitterCollection();
-		RING.Particles.initialize();
-		//make the controls
-		RING.controls = new RING.Controls();
-		//make the attract mode
-		RING.attractMode = new RING.AttractMode();
+		//do our initial test
+		if(WebGLTest() && Modernizr.webaudio) {
+			//get rid of the noChrome
+			$("#noChrome").css({
+				"z-index" : -100,
+				opacity : 0,
+			})
+			setupTHREE();
+			//addOctagon();
+			makeSprite();
+			setupStats();
+			//bind the basic events
+			bindEvents();
+			//make the tumblr collection
+			RING.tumblrCollection = new RING.TumblrCollection();
+			RING.twitterCollection = new RING.TwitterCollection();
+			RING.Particles.initialize();
+			//make the controls
+			RING.controls = new RING.Controls();
+			//make the attract mode
+			RING.attractMode = new RING.AttractMode();
+			//make the sound playing module
+			RING.sound = new RING.Sound();
+		} else {
+
+		}
+	}
+
+	function WebGLTest() {
+		var test = function() {
+			try {
+				return !!window.WebGLRenderingContext && !!document.createElement('canvas').getContext('experimental-webgl');
+			} catch( e ) {
+				return false;
+			}
+		}();
+		return test;
 	}
 
 	//a loaded counter which will remove the loading indicator
@@ -74,13 +106,15 @@ var RING = function() {
 		RING.camera.updateProjectionMatrix();
 		RING.renderer.setSize(RING.width, RING.height);
 		//set the controls so they display correctly by scrolling on smaller screens
-		if(RING.height < 800) {
-			var $controls = $("#controls");
-			var top = $controls.position().top;
-			$controls.css({
-				"max-height" : RING.height - top,
-			});
-		}
+		/*
+		 if(RING.height < 800) {
+		 var $controls = $("#controls");
+		 var top = $controls.position().top;
+		 $controls.css({
+		 "max-height" : RING.height - top,
+		 });
+		 }
+		 */
 	}
 
 	//makes the octagon in the center
@@ -242,11 +276,12 @@ var RING = function() {
 }();
 
 //development version
-RING.dev = true;
+RING.dev = false;
 RING.dontLoad = false;
-RING.installation = false;
-if(RING.installation) {
-	RING.artistCount = 26;
-} else {
-	RING.artistCount = 14;
-}
+/*
+ RING.installation = false;
+ if(RING.installation) {
+ RING.artistCount = 26;
+ } else {
+ RING.artistCount = 14;
+ }*/

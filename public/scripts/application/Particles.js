@@ -5,7 +5,7 @@
  */
 
 RING.Particles = function() {
-	
+
 	var particleCount = 30000;
 
 	var circleSystem, circleAttributes, circleUniforms;
@@ -232,7 +232,11 @@ RING.Particles = function() {
 				return;
 		}
 		//var easing = model.get("reblog_level") > 0 ? TWEEN.Easing.Elastic.Out : TWEEN.Easing.Linear.None;
-		var easing = TWEEN.Easing.Linear.None;
+		if(model.get("visible")) {
+			var easing = TWEEN.Easing.Exponential.Out;
+		} else {
+			var easing = TWEEN.Easing.Exponential.In;
+		}
 		var tween = new TWEEN.Tween({
 			x : system.geometry.vertices[index].x,
 			y : system.geometry.vertices[index].y,
@@ -296,8 +300,8 @@ RING.Particles = function() {
 			default:
 				return;
 		}
-		system.geometry.vertices[index].x = -1000;
-		system.geometry.vertices[index].y = -1000;
+		system.geometry.vertices[index].x = -5000;
+		system.geometry.vertices[index].y = -5000;
 		system.geometry.verticesNeedUpdate = true;
 	}
 

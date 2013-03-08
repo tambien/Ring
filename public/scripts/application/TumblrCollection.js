@@ -136,5 +136,10 @@ RING.TumblrCollection = Backbone.Collection.extend({
 		this.primary = this.filter(function(model) {
 			return model.get('reblogged_from') === null;
 		});
+	}, 
+	removeAll : function(){
+		this.forEach(function(model){
+			model.removeAll();
+		});
 	}
 });

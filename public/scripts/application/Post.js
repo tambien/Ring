@@ -45,6 +45,14 @@ RING.Post = Backbone.Model.extend({
 	remove : function() {
 		this.view.remove();
 	},
+	//take all of the things off of the screen
+	removeAll : function(){
+		if (this.line){
+			RING.scene.remove(this.line);
+		}
+		//put hte particle off of the screen
+		RING.Particles.positionInstant(this, this.get("x") > 0 ? 10000 : -10000, this.get("y") > 0 ? 10000 : -10000);
+	},
 	getInitialPosition : function() {
 		//the 360 degrees is from the startTime to the endTime
 		var startTime = RING.controls.get("startTime");
@@ -158,13 +166,13 @@ RING.Post.View = Backbone.View.extend({
 			RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") + 1, {
 				silent : false,
 			})
-			RING.Particles.positionInstant(model, model.get("x") > 0 ? 1000 : -1000, model.get("y") > 0 ? 1000 : -1000);
+			RING.Particles.positionInstant(model, model.get("x") > 0 ? 10000 : -10000, model.get("y") > 0 ? 10000 : -10000);
 			self.position(model, model.get("x"), model.get("y"));
 		} else {
 			RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") - 1, {
 				silent : false,
 			})
-			RING.Particles.position(model, model.get("x") > 0 ? 1000 : -1000, model.get("y") > 0 ? 1000 : -1000);
+			RING.Particles.position(model, model.get("x") > 0 ? 10000 : -10000, model.get("y") > 0 ? 10000 : -10000);
 		}
 		//}, RING.Util.randomInt(0, 600), model);
 	},
@@ -217,5 +225,6 @@ RING.Post.View = Backbone.View.extend({
 		RING.highlight.position.y = this.model.get("y");
 		RING.highlight.scale.x = this.model.get("size") * 1.6;
 		RING.highlight.scale.y = this.model.get("size") * 1.6;
-	}
+	}, 
+	
 })

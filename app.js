@@ -73,13 +73,15 @@ setInterval(function() {
 	artists.retrieve(function() {
 		console.log("got the artists from the spreadsheet");
 	});
-	//every 12 hours
-}, 12 * 60 * 60 * 1000);
+	//every 1 hour
+},  60 * 60 * 1000);
+/*
 //update the cache every 60 minutes
 setInterval(function() {
 	client.cachePastWeek(function() {
 		console.log('cached past week');
 	})
 }, 60 * 60 * 1000);
+*/
 //print a message
 console.log('RING Started');

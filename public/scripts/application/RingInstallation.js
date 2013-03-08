@@ -31,6 +31,8 @@ var RING = function() {
 		RING.controls = new RING.Controls();
 		//make the attract mode
 		RING.attractMode = new RING.AttractMode();
+		//make the sound playing module
+		RING.sound = new RING.Sound();
 	}
 
 	//a loaded counter which will remove the loading indicator

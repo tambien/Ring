@@ -6,7 +6,8 @@
 	<link rel="stylesheet" href="style/ring.css" />
 	<link rel="stylesheet" href="style/jquery-ui-1.10.1.custom.css" />
 	<!--DEPENDENCIES-->
-	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/jquery.js"></script>
+	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/dependencies.js"></script>
+	<!--script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/jquery.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/jquery.transit.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/underscore.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/backbone.js"></script>
@@ -17,8 +18,10 @@
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/RequestAnimationFrame.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/three.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/tween.min.js"></script>
+	<script type="text/javascript" charset="UTF-8" src="./scripts/dependencies/modernizr.custom.js"></script-->
 	<!--APPLICATION-->
-	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Ring.js"></script>
+	<script type="text/javascript" charset="UTF-8" src="./scripts/application/application.js"></script>
+	<!--script type="text/javascript" charset="UTF-8" src="./scripts/application/Ring.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Util.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Particles.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Post.js"></script>
@@ -29,46 +32,64 @@
 	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Artists.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Controls.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Attract.js"></script>
+	<script type="text/javascript" charset="UTF-8" src="./scripts/application/Sound.js"></script-->
 </head>
 <body>
 	<script type="x-shader/x-vertex" id="vertexshader">
+		attribute float size;
+		attribute vec3 ca;
 
-			attribute float size;
-			attribute vec3 ca;
+		varying vec3 vColor;
 
-			varying vec3 vColor;
+		void main() {
 
-			void main() {
+		vColor = ca;
 
-				vColor = ca;
+		vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
-				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+		//gl_PointSize = size;
+		gl_PointSize = size * ( 1000.0 / length( mvPosition.xyz ) );
 
-				//gl_PointSize = size;
-				gl_PointSize = size * ( 1000.0 / length( mvPosition.xyz ) );
+		gl_Position = projectionMatrix * mvPosition;
 
-				gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentshader">
+		uniform vec3 color;
+		uniform sampler2D texture;
 
-			}
+		varying vec3 vColor;
 
-		</script>
+		void main() {
 
-		<script type="x-shader/x-fragment" id="fragmentshader">
+		gl_FragColor = vec4( color * vColor, 1.0 );
+		gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 
-			uniform vec3 color;
-			uniform sampler2D texture;
-
-			varying vec3 vColor;
-
-			void main() {
-
-				gl_FragColor = vec4( color * vColor, 1.0 );
-				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
-
-			}
-
-		</script>
+		}
+	</script>
 	<img id="ringTitle" src="images/Ring_Title.png">
+	<div id="noChrome">
+		<div id="chromeApplication">
+			<span class="titleText">Ring is a Chrome application.</span>
+			<br>
+			<br>
+			<span class="titleText"> Ring was designed to use the most modern web technologies and
+				requires a browser that supports WebGL and Web Audio, like Chrome.
+				<br>
+				<br>
+				You can <a href='http://www.google.com/chrome/' target="_blank" class="yellow">download Google Chrome here.</a>
+				<br>
+				<br>
+				Ring allows you to understand how the latest news about the hottest artists at SXSW
+				moves through social media. From the first tweet to the final reblog, watch how big news
+				spreads throughout the world.
+				<br>
+				<br>
+				Ring is on Twitter too! Follow <span class='yellow'>@eMuzeRing</span> for cool facts about artists at
+				SXSW and tweet <span class='yellow'>@eMuzeRing</span> with new hashtags or artists you think we should include! </span>
+		</div>
+		<a id="downloadChrome" href='http://www.google.com/chrome/' target="_blank" class="yellow titleText">GET CHROME</a>
+	</div>
 	<div id="loadingScreen">
 		<div id="introducing">
 			<span class="titleText">Introducing Ring.</span>
@@ -79,23 +100,23 @@
 			<span class="titleText purpleText">Be eMuzed.</span-->
 			<br>
 			<br>
-			<span class="titleText">
-				eMuze is a destination for discovering and sharing the content you love 
+			<span class="titleText"> eMuze is a destination for discovering and sharing the content you love
 				from today's best artists and entertainers.
 				<br>
 				<br>
-				Ring shows you how the latest news about SXSW's hottest artists moves 
-				through social media. From the first tweet to the final reblog, watch 
+				Ring shows you how the latest news about SXSW's hottest artists moves
+				through social media. From the first tweet to the final reblog, watch
 				how big news spreads throughout the world.
 				<br>
 				<br>
-				Ring is on Twitter too! Follow @emuzeRing for cool facts about artists at 
-				SXSW and tweet @emuzeRing with new hashtags or artists you think we should include!
-			</span>
+				Ring is on Twitter too! Follow @eMuzeRing for cool facts about artists at
+				SXSW and tweet @eMuzeRing with new hashtags or artists you think we should include! </span>
 		</div>
 		<div id="loadingBar">
 			<div id='loadedArea'></div>
-			<div id='loadingText' class='titleText'>LOADING</div>
+			<div id='loadingText' class='titleText'>
+				LOADING
+			</div>
 		</div>
 	</div>
 	<img id="emuzelogo" src="images/eMuze_logomark_small.png">
@@ -128,4 +149,16 @@
 	<img src="images/Window_Bottom_Right.png" class='pointer bottom_right'>
 	<img src="images/Window_Top_Right.png" class='pointer top_right'>
 	<img src="images/Window_Top_Left.png" class='pointer top_left'>
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-39139943-1']);
+		_gaq.push(['_trackPageview']); (function() {
+			var ga = document.createElement('script');
+			ga.type = 'text/javascript';
+			ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 </body>

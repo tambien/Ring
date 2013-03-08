@@ -478,7 +478,7 @@ RING.Controls.View = Backbone.View.extend({
 	expand : function(model, expand) {
 		var time = 500;
 		var width = "400px";
-		var height = "800px";
+		var height = "1000px";
 		var self = this;
 		if(expand) {
 			//first expand the y direction
@@ -916,13 +916,18 @@ RING.LoadingScreen = Backbone.View.extend({
 		}
 	},
 	begin : function() {
+		var model = this.model;
 		$("#loadingScreen").transition({
 			width : "0px"
 		}, 200, function() {
 			$(this).css({
 				"z-index" : -1000,
 			})
-		})
+			if (!RING.installation){
+				model.set("expanded", true);
+			}
+			RING.sound.set("started", true);
+		});
 	}
 });
 

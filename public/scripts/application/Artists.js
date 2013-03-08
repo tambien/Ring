@@ -100,6 +100,7 @@ RING.Artists = Backbone.Collection.extend({
 
 	initialize : function(models, options) {
 		this.on("add", this.added);
+		this.on("change:checked", this.removeAll);
 		this.topPostsLength = RING.artistCount;
 		this.searchLength = 4;
 		//the list of searches
@@ -193,6 +194,20 @@ RING.Artists = Backbone.Collection.extend({
 			listArtist.set({
 				count : artist.get("count"),
 			});
+		}
+	},
+	removeAll : function() {
+		checked = this.where({
+			checked : true,
+		});
+		//this is a safeguard against nothing being left on the screen.
+		if(checked.length === 0) {
+			setTimeout(function() {
+				RING.controls.set("visiblePosts", 0);
+				//make sure there is nothing visible
+				RING.tumblrCollection.removeAll();
+				RING.twitterCollection.removeAll();
+			}, 1000);
 		}
 	}
 });

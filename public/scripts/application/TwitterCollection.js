@@ -101,5 +101,10 @@ RING.TwitterCollection = Backbone.Collection.extend({
 		_.forEach(artistPosts, function(model) {
 			model.allLoaded();
 		});
+	},
+	removeAll : function() {
+		this.forEach(function(model) {
+			model.removeAll();
+		});
 	}
 });
