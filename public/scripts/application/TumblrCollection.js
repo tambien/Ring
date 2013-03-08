@@ -43,7 +43,7 @@ RING.TumblrCollection = Backbone.Collection.extend({
 	},
 	sync : function(callback) {
 		//get the tumblr posts from the database
-		var reqString = window.location + "get?type=tumblr";
+		var reqString = window.location.origin + "get?type=tumblr";
 		var self = this;
 		if(RING.dontLoad) {
 			callback();

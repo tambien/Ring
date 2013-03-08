@@ -24,7 +24,7 @@ RING.TwitterCollection = Backbone.Collection.extend({
 	},
 	sync : function(callback) {
 		//get the twitter posts from the database
-		var reqString = window.location + "get?type=twitter";
+		var reqString = window.location.origin + "get?type=twitter";
 		var self = this;
 		if(RING.dontLoad) {
 			callback();

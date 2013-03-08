@@ -204,7 +204,7 @@ RING.Controls = Backbone.Model.extend({
 		})
 	},
 	loadFEEDsxsw : function(callback) {
-		var reqString = window.location + "get?type=week&artist=FEEDsxsw";
+		var reqString = window.location.origin + "/get?type=week&artist=FEEDsxsw";
 		var self = this;
 		self.set("loadingText", "Getting FEEDsxsw Posts")
 		$.ajax(reqString, {
@@ -243,7 +243,7 @@ RING.Controls = Backbone.Model.extend({
 		});
 	},
 	loadConnecteMuze : function(callback) {
-		var reqString = window.location + "get?type=week&artist=eMuze%20Connect";
+		var reqString = window.location.origin + "/get?type=week&artist=eMuze%20Connect";
 		var self = this;
 		self.set("loadingText", "Getting eMuze Connect Posts")
 		$.ajax(reqString, {
@@ -284,9 +284,9 @@ RING.Controls = Backbone.Model.extend({
 	//this is the loading sequence for all of the info
 	loadCache : function() {
 		if(RING.installation) {
-			var reqString = window.location + "get?type=cacheFull";
+			var reqString = window.location.origin + "/get?type=cacheFull";
 		} else {
-			var reqString = window.location + "get?type=cache";
+			var reqString = window.location.origin + "/get?type=cache";
 		}
 		var self = this;
 		self.set("loading", self.get('loading') + 1);
@@ -328,7 +328,7 @@ RING.Controls = Backbone.Model.extend({
 	loadArtists : function(artistName, callback) {
 		//search the artist for the past week
 		artistName = encodeURIComponent(artistName);
-		var reqString = window.location + "get?type=week&artist=" + artistName;
+		var reqString = window.location.origin + "/get?type=week&artist=" + artistName;
 		var self = this;
 		$.ajax(reqString, {
 			success : function(response) {
@@ -364,9 +364,9 @@ RING.Controls = Backbone.Model.extend({
 	backgroundUpdate : function() {
 		this.updateeMuze();
 		if(RING.installation) {
-			var reqString = window.location + "get?type=cacheFull";
+			var reqString = window.location.origin + "/get?type=cacheFull";
 		} else {
-			var reqString = window.location + "get?type=cache";
+			var reqString = window.location.origin + "/get?type=cache";
 		}
 		var self = this;
 		$.ajax(reqString, {
@@ -394,7 +394,7 @@ RING.Controls = Backbone.Model.extend({
 	},
 	updateeMuze : function() {
 		//update emuze connect
-		var reqString = window.location + "get?type=week&artist=eMuze%20Connect";
+		var reqString = window.location.origin + "/get?type=week&artist=eMuze%20Connect";
 		var self = this;
 		self.set("loadingText", "Getting eMuze Connect Posts")
 		$.ajax(reqString, {
@@ -407,7 +407,7 @@ RING.Controls = Backbone.Model.extend({
 		});
 		//update feedsxsw
 		//update emuze connect
-		var reqString = window.location + "get?type=week&artist=FEEDsxsw";
+		var reqString = window.location.origin + "/get?type=week&artist=FEEDsxsw";
 		var self = this;
 		self.set("loadingText", "Getting eMuze Connect Posts")
 		$.ajax(reqString, {
@@ -478,7 +478,7 @@ RING.Controls.View = Backbone.View.extend({
 	expand : function(model, expand) {
 		var time = 500;
 		var width = "400px";
-		var height = "700px";
+		var height = "800px";
 		var self = this;
 		if(expand) {
 			//first expand the y direction
@@ -822,7 +822,7 @@ RING.Search = Backbone.View.extend({
 		this.getAutoCompleteList();
 	},
 	getAutoCompleteList : function(model) {
-		var reqString = window.location + "get?type=artists";
+		var reqString = window.location.origin + "/get?type=artists";
 		var self = this;
 		$.ajax(reqString, {
 			success : function(response) {
@@ -853,7 +853,7 @@ RING.Search = Backbone.View.extend({
 		} else {
 			//search the artist for the past week
 			artistName = encodeURIComponent(artistName);
-			var reqString = window.location + "get?type=week&artist=" + artistName;
+			var reqString = window.location.origin + "/get?type=week&artist=" + artistName;
 			var self = this;
 			$.ajax(reqString, {
 				success : function(response) {

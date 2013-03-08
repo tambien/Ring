@@ -102,10 +102,6 @@ RING.Post = Backbone.Model.extend({
 		this.set("radius", Math.sqrt(x * x + y * y));
 	},
 	clicked : function(x, y) {
-		//remove any other post displays
-		$(".post").remove();
-		RING.highlight.position.x = -10000;
-		RING.highlight.position.y = -10000;
 		//position the element relative to the click
 		this.view.createElement();
 		this.view.$el.appendTo($("#container"));
@@ -216,5 +212,10 @@ RING.Post.View = Backbone.View.extend({
 		}
 		this.$el.css(elCss);
 		this.$container.css(containerCss);
+		//position the highlight
+		RING.highlight.position.x = this.model.get("x");
+		RING.highlight.position.y = this.model.get("y");
+		RING.highlight.scale.x = this.model.get("size") * 1.6;
+		RING.highlight.scale.y = this.model.get("size") * 1.6;
 	}
 })

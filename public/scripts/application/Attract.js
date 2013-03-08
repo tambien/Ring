@@ -39,7 +39,7 @@ RING.AttractMode = Backbone.Model.extend({
 		}
 	},
 	changeAttract : function(model, attractMode) {
-		RING.controls.set("expanded", true);
+		RING.controls.set("expanded", false);
 		//clear the searches after a minute
 		RING.controls.artistList.clearSearches();
 		this.attract();
@@ -47,7 +47,7 @@ RING.AttractMode = Backbone.Model.extend({
 	attract : function() {
 		//remove any post displays
 		if(this.get("attractMode")) {
-			$(".post").remove();
+			RING.removeHighlight();
 			//pick a random action
 			var actions = [this.changeTime, this.changeArtist, this.showPopOver, this.showPopOver, this.showPopOver, this.showPopOver, this.changeReblogLevel];
 			//pick a random action

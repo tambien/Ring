@@ -7,6 +7,7 @@ body {
 	-ms-user-select: none;
 	user-select: none;
 	margin: 0px;
+	padding: 0px;
 }
 /*
  * MAIN
@@ -29,6 +30,7 @@ body {
 	top: 0px;
 	left: 0px;
 	background-color: black;
+	overflow: hidden;
 }
 #canvas {
 	width: 100%;
@@ -52,7 +54,7 @@ body {
 }
 #ringTitle {
 	position: absolute;
-	top: 10px;
+	top: 5px;
 	left: 10px;
 	z-index: 100;
 }
@@ -72,14 +74,14 @@ body {
 #loadingScreen #introducing {
 	position: absolute;
 	width: 380px;
-	height: 270px;
+	height: 230px;
 	border-left: solid 5px #9E41C3;
 	background-color: #222;
 	text-align: left;
 	color: white;
 	padding: 10px;
 	left: 15px;
-	top: 110px;
+	top: 100px;
 }
 #loadingScreen .purpleText {
 	margin-left: 4px;
@@ -89,7 +91,7 @@ body {
 #loadingScreen #loadingBar {
 	position: absolute;
 	left: 15px;
-	top: 420px;
+	top: 365px;
 	z-index: 98;
 	width: 250px;
 	height: 26px;
@@ -135,19 +137,19 @@ body {
 	padding: 0px;
 	position: absolute;
 	left: 15px;
-	top: 155px;
+	top: 150px;
 	width: 0px;
 	height: 0px;
 	max-width: 380px;
-	max-height: 600px;
-	overflow: hidden;
+	max-height: 650px;
+	overflow: scroll;
 	opacity: 0.7;
 	z-index: 98;
 }
 #revealButton {
 	position: absolute;
 	left: 15px;
-	top: 110px;
+	top: 105px;
 	z-index: 98;
 	width: 126px;
 	height: 26px;
@@ -161,7 +163,7 @@ body {
 #visitEmuze {
 	position: absolute;
 	left: 15px;
-	top: 156px;
+	top: 150px;
 	z-index: 98;
 	width: 126px;
 	height: 26px;
@@ -222,7 +224,7 @@ body {
 	width: 100%;
 	min-height: 100px;
 }
-#searchArtists{
+#searchArtists {
 	position: relative;
 	margin-bottom: 10px;
 	width: 100%;
@@ -274,7 +276,7 @@ body {
 	position: relative;
 	overflow: auto;
 	margin-top: 15px;
-	padding-bottom: 5px;
+	padding-bottom: 15px;
 	border-left: solid 5px #9E41C3;
 	background-color: #222;
 	height: 70px;
@@ -343,7 +345,6 @@ body {
 	margin-top: -10px;
 	margin-left: -20px;
 }
-
 .dateIndicator .date {
 	font-size: 18px;
 }
@@ -353,10 +354,10 @@ body {
 .reblogLevel {
 	position: relative;
 	margin-top: 15px;
-	padding-bottom: 5px;
+	margin-top: 15px;
 	border-left: solid 5px #9E41C3;
 	background-color: #222;
-	height: 75px;
+	height: 85px;
 }
 .reblogLevel #title {
 	padding: 10px;
@@ -502,9 +503,9 @@ body {
 	font-family: sans-serif;
 	font-size: 12px;
 	border: solid 1px #C1C1C1;
-	-moz-border-radius: 2px; 
+	-moz-border-radius: 2px;
 	-webkit-border-radius: 2px;
-	border-radius: 2px; 
+	border-radius: 2px;
 }
 .post .container * {
 	z-index: 10000;
