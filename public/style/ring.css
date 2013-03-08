@@ -6,6 +6,7 @@ body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	margin: 0px;
 }
 /*
  * MAIN
@@ -218,9 +219,13 @@ body {
 }
 #tagsList {
 	position: relative;
-	margin-bottom: 10px;
 	width: 100%;
 	min-height: 100px;
+}
+#searchArtists{
+	position: relative;
+	margin-bottom: 10px;
+	width: 100%;
 }
 .tag {
 	width: 49%;

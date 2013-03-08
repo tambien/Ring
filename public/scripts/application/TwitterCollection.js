@@ -42,16 +42,54 @@ RING.TwitterCollection = Backbone.Collection.extend({
 				}
 			})
 		}
-	}, 
+	},
 	addArtist : function(posts) {
 		var artistName = posts.artist.name;
-		this.add(posts.twitter, {
-			merge : false
+		//if the post is already in the database, update it's attributes
+		var artistName = posts.artist.name;
+		//now do a smart merge on each of hte posts
+		var self = this;
+		_.forEach(posts.twitter, function(post) {
+			var postInCollection = self.get(post.id);
+			//if it's in the db, merge the data that needs to be merged
+			if(postInCollection) {
+				postInCollection.set({
+					note_count : post.note_count
+				});
+			} else {
+				//otherwise add it
+				self.add(post);
+			}
 		});
 		var artistPosts = this.where({
 			artist : artistName
 		});
 		_.forEach(artistPosts, function(model) {
+			model.allLoaded();
+		});
+	},
+	updateArtist : function(posts) {
+		//if the post is already in the database, update it's attributes
+		var artistName = posts.artist.name;
+		var newPosts = [];
+		//now do a smart merge on each of hte posts
+		var self = this;
+		_.forEach(posts.twitter, function(post) {
+			var postInCollection = self.get(post.id);
+			//if it's in the db, merge the data that needs to be merged
+			if(postInCollection) {
+				postInCollection.set({
+					note_count : post.note_count,
+				});
+			} else {
+				//otherwise add it
+				var tweet = new RING.Twitter(post)
+				self.add(tweet);
+				newPosts.push(tweet);
+			}
+		});
+		//load the new posts
+		_.forEach(newPosts, function(model) {
 			model.allLoaded();
 		});
 	},

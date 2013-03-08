@@ -87,7 +87,9 @@ RING.AttractMode = Backbone.Model.extend({
 	},
 	changeArtist : function() {
 		//choose a random artist from the artist list
-		var list = RING.controls.artistList.models;
+		var list = RING.controls.artistList.filter(function(model) {
+			return !(model.get("searchedFor") || model.get("eMuze"));
+		});
 		var artist = RING.Util.choose(list);
 		//switch the state of that artist
 		artist.set("checked", !artist.get('checked'));

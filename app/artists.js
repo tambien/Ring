@@ -61,7 +61,7 @@ var twitter = require('./twitter/twitter-db');
 
 	//get top 26
 	function getTopArtists() {
-		return artists.slice(0, 14);
+		return artists.slice(0, 26);
 	};
 	
 	function getArtist(name){
@@ -221,7 +221,7 @@ var twitter = require('./twitter/twitter-db');
 	module.exports.retrieve = retrieve;
 
 	module.exports.getTopArtists = getTopArtists;
-
+	
 	module.exports.getArtistNames = getArtistNames;
 
 	//module.exports.getTwitterHandles = getTwitterHandles;

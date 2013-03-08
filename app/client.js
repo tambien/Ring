@@ -42,6 +42,14 @@ var artists = require('./artists');
 				})
 				break;
 			case "cache":
+				//shorten the cache to just 14 artists
+				var shortCache = {
+					lastUpdate : cache.lastUpdate,
+					posts : cache.posts.slice(0, 14),
+				};
+				res.send(shortCache);
+				break;
+			case "cacheFull":
 				res.send(cache);
 				break;
 			case "twitter":

@@ -61,13 +61,18 @@ RING.Controls = Backbone.Model.extend({
 		this.zoom = new RING.Zoom({
 			model : this,
 		});
-		if(!RING.installation) {
-			this.search = new RING.Search({
-				model : this,
-			});
-		}
+		this.search = new RING.Search({
+			model : this,
+		});
 		//start the loading
 		this.loadCache();
+		if(RING.installation) {
+			//setup the background update every 60 minutes
+			setInterval(function(self) {
+				console.log("background update");
+				self.backgroundUpdate();
+			}, 60 * 60 * 1000, this);
+		}
 	},
 	allLoaded : function(model, allLoaded) {
 		if(allLoaded) {
@@ -278,7 +283,11 @@ RING.Controls = Backbone.Model.extend({
 	},
 	//this is the loading sequence for all of the info
 	loadCache : function() {
-		var reqString = window.location + "get?type=cache";
+		if(RING.installation) {
+			var reqString = window.location + "get?type=cacheFull";
+		} else {
+			var reqString = window.location + "get?type=cache";
+		}
 		var self = this;
 		self.set("loading", self.get('loading') + 1);
 		self.loadeMuze(function() {
@@ -293,7 +302,7 @@ RING.Controls = Backbone.Model.extend({
 					for(var i = 0; i < posts.length; i++) {
 						var post = posts[i];
 						setTimeout(function(post, index) {
-							self.set("loadingText", "Loading Aritst " + index + "/14");
+							self.set("loadingText", "Loading Aritst " + index + "/" + posts.length);
 							//add the artist to the list also
 							//make an artist
 							var artist = new RING.Artist(post.artist);
@@ -351,6 +360,65 @@ RING.Controls = Backbone.Model.extend({
 			}
 		})
 	},
+	//same as load cache, but with set timeouts to lighten the processor load
+	backgroundUpdate : function() {
+		this.updateeMuze();
+		if(RING.installation) {
+			var reqString = window.location + "get?type=cacheFull";
+		} else {
+			var reqString = window.location + "get?type=cache";
+		}
+		var self = this;
+		$.ajax(reqString, {
+			success : function(response) {
+				var posts = response.posts;
+				//for each artist, add it to the twitter and tumblr posts
+				for(var i = 0; i < posts.length; i++) {
+					var post = posts[i];
+					setTimeout(function(post) {
+						//add the artist to the list also
+						//make an artist
+						var artist = new RING.Artist(post.artist);
+						//add that artist to the collection
+						self.artistList.updateList(artist);
+						RING.tumblrCollection.updateArtist(post);
+						RING.twitterCollection.updateArtist(post);
+						//increment the loading bar
+					}, i * 30 * 1000, post);
+				}
+			},
+			error : function() {
+				console.error("could not get that artist");
+			}
+		})
+	},
+	updateeMuze : function() {
+		//update emuze connect
+		var reqString = window.location + "get?type=week&artist=eMuze%20Connect";
+		var self = this;
+		self.set("loadingText", "Getting eMuze Connect Posts")
+		$.ajax(reqString, {
+			success : function(response) {
+				var post = response.posts[0];
+				//for each artist, add it to the twitter and tumblr posts
+				RING.tumblrCollection.updateArtist(post);
+				RING.twitterCollection.updateArtist(post);
+			}
+		});
+		//update feedsxsw
+		//update emuze connect
+		var reqString = window.location + "get?type=week&artist=FEEDsxsw";
+		var self = this;
+		self.set("loadingText", "Getting eMuze Connect Posts")
+		$.ajax(reqString, {
+			success : function(response) {
+				var post = response.posts[0];
+				//for each artist, add it to the twitter and tumblr posts
+				RING.tumblrCollection.updateArtist(post);
+				RING.twitterCollection.updateArtist(post);
+			}
+		});
+	}
 });
 
 RING.Controls.View = Backbone.View.extend({
@@ -794,10 +862,9 @@ RING.Search = Backbone.View.extend({
 					if(post.artist !== null) {
 						//make an artist
 						var artist = new RING.Artist(post.artist);
+						artist.set("searchedFor", true);
+						self.model.artistList.add(artist);
 						//add that artist to the collection
-						self.model.artistList.add(artist, {
-							merge : false,
-						});
 						RING.tumblrCollection.addArtist(post);
 						RING.twitterCollection.addArtist(post);
 						//add the artist to the list also
@@ -832,12 +899,7 @@ RING.LoadingScreen = Backbone.View.extend({
 		this.$loadingText.html(text);
 	},
 	updateProgress : function(model, loadedCount) {
-		var total = 1;
-		if(RING.installation) {
-			total = 18;
-		} else {
-			total = 18;
-		}
+		var total = RING.artistCount + 4;
 		var percentage = Math.round((loadedCount / total) * 100);
 		percentage += "%";
 		this.$loadingArea.css({

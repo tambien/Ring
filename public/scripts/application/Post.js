@@ -30,6 +30,8 @@ RING.Post = Backbone.Model.extend({
 	superInit : function(attributes, options) {
 		//set the radius initially
 		this.set("radius", RING.Util.randomFloat(350, 420));
+		//when the note count changes, update the size
+		this.on("change:note_count", this.getSizeFromNoteCount);
 		//calculate the position
 		this.getSizeFromNoteCount();
 		//the cid
@@ -89,7 +91,7 @@ RING.Post = Backbone.Model.extend({
 		}
 	},
 	getSizeFromNoteCount : function() {
-		var count = this.get("note_count")/10 + 1;
+		var count = this.get("note_count") / 10 + 1;
 		var size = 0;
 		size = Math.log(count) * 20 + 5;
 		this.set("size", size);
@@ -100,12 +102,16 @@ RING.Post = Backbone.Model.extend({
 		this.set("radius", Math.sqrt(x * x + y * y));
 	},
 	clicked : function(x, y) {
+		//remove any other post displays
+		$(".post").remove();
+		RING.highlight.position.x = -10000;
+		RING.highlight.position.y = -10000;
 		//position the element relative to the click
 		this.view.createElement();
 		this.view.$el.appendTo($("#container"));
 		this.view.positionElement(x, y);
 		//console.log(this);
-	}, 
+	},
 });
 
 RING.Post.View = Backbone.View.extend({

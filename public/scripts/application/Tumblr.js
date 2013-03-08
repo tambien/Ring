@@ -365,8 +365,8 @@ RING.Tumblr.View = RING.Post.View.extend({
 			}
 		}, 800, this, model);
 		//should be removed instantly
-		if (this.line) {
-			if (!visible){
+		if(this.line) {
+			if(!visible) {
 				RING.scene.remove(this.line);
 			}
 		}
@@ -399,8 +399,10 @@ RING.Tumblr.View = RING.Post.View.extend({
 	},
 	//draw edges to the connected reposts
 	drawEdgeToOrigin : function() {
-		//if there are already lines, don't draw some more
-		//if(!this.line) {
+		//remove it
+		if(this.line) {
+			RING.scene.remove(this.line);
+		}
 		var origin = this.model.origin;
 		if(origin) {
 			var geometry = new THREE.Geometry();
@@ -411,7 +413,6 @@ RING.Tumblr.View = RING.Post.View.extend({
 			}
 			this.line = new THREE.Line(geometry, RING.Tumblr.lineMaterial);
 		}
-		//}
 	},
 	remove : function() {
 		//remove all of the objects that were added to the scene

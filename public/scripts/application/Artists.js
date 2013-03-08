@@ -14,9 +14,11 @@ RING.Artist = Backbone.Model.extend({
 		"visible" : false,
 		//put the emuze ones in a special container
 		"eMuze" : false,
+		//signifies if the artist was added from a search
+		"searchedFor" : false,
 	},
 	initialize : function(attributes, options) {
-
+		this.id = this.get("name");
 		//make the view
 		this.view = new RING.Artist.View({
 			model : this,
@@ -62,14 +64,26 @@ RING.Artist.View = Backbone.View.extend({
 	addOrRemove : function() {
 		if(this.model.get("eMuze")) {
 			if(this.model.get("visible")) {
+				this.delegateEvents();
 				this.$el.appendTo($("#eMuzeTags"));
 			} else {
+				// this.undelegateEvents();
+				this.$el.remove();
+			}
+		} else if(this.model.get("searchedFor")) {
+			if(this.model.get("visible")) {
+				this.delegateEvents();
+				this.$el.appendTo($("#searchList"));
+			} else {
+				this.delegateEvents();
 				this.$el.remove();
 			}
 		} else {
 			if(this.model.get("visible")) {
+				this.delegateEvents();
 				this.$el.appendTo($("#tagsList"));
 			} else {
+				this.delegateEvents();
 				this.$el.remove();
 			}
 		}
@@ -85,32 +99,11 @@ RING.Artists = Backbone.Collection.extend({
 	model : RING.Artist,
 
 	initialize : function(models, options) {
-		//get the tags initially
-		//this.getArtists();
-		this.searches = [];
-		//make a request whenever there is a change in the tags
 		this.on("add", this.added);
-		this.on("add", this.makeVisible);
-		//this.listenTo("change:checked", this.searchTags);
-		//this.topPosts = 14;
-		this.maxLength = 18;
-	},
-	getArtists : function(callback) {
-		var reqString = window.location + "get?type=top";
-		var self = this;
-		$.ajax(reqString, {
-			success : function(response) {
-				console.log("artist list loaded");
-				self.update(response, {
-					silent : true,
-				});
-				self.makeVisible();
-				callback();
-			},
-			error : function() {
-				console.error("could not fetch that data");
-			}
-		})
+		this.topPostsLength = RING.artistCount;
+		this.searchLength = 4;
+		//the list of searches
+		this.searches = [];
 	},
 	comparator : function(a, b) {
 		var aCount = a.get("count");
@@ -123,27 +116,53 @@ RING.Artists = Backbone.Collection.extend({
 			return 1;
 		}
 	},
-	makeVisible : function() {
-		//make the most popular posts visible in the list
-		for(var i = 0; i < this.length; i++) {
-			var model = this.models[i];
-			if(i < this.maxLength) {
-				model.set('visible', true);
-			} else {
-				model.set('visible', false);
-				//if it's invisible it's not checked either
-				model.set('checked', false);
+	added : function(model) {
+		if(model.get("searchedFor")) {
+			this.searches.push(model);
+			model.set({
+				visible : true,
+			})
+			// if there are too many searches, remove the first one
+			if(this.searches.length > this.searchLength) {
+				var rmArtist = this.searches.shift();
+				rmArtist.set({
+					checked : false,
+					visible : false,
+				})
+				this.remove(rmArtist);
 			}
+		} else {
+			var topPosts = this.filter(function(model) {
+				return !(model.get("searchedFor") || model.get("eMuze"));
+			});
+			if(topPosts.length > this.topPostsLength) {
+				//remove the last one
+				var rmArtist = _.last(topPosts);
+				rmArtist.set({
+					checked : false,
+					visible : false,
+				})
+				this.remove(rmArtist);
+			}
+			this.putInOrder();
 		}
 	},
-	added : function(model) {
-		this.searches.push(model);
-		if(this.length > this.maxLength) {
-			//remove the one after the top posts
-			var remove = this.searches.shift();
-			remove.set("visible", false);
-			remove.set("checked", false);
-			this.remove(remove);
+	putInOrder : function() {
+		var topPosts = this.filter(function(model) {
+			return !(model.get("searchedFor") || model.get("eMuze"));
+		});
+		for(var i = 0; i < topPosts.length; i++) {
+			//remove them all
+			var post = topPosts[i];
+			post.set("visible", false);
+		}
+		//add them back in the correct order
+		for(var i = 0; i < topPosts.length; i++) {
+			//remove them all
+			if(i < this.topPostsLength) {
+				var post = topPosts[i];
+				post.set("visible", true);
+			}
 		}
 	},
 	clearSearches : function() {
@@ -157,15 +176,23 @@ RING.Artists = Backbone.Collection.extend({
 		}
 		this.searches = [];
 	},
-	//get the color of an artist
-	getColor : function(artist) {
-
-	},
 	//returns the handle for an artist name
 	getHandle : function(artist) {
 		var item = this.where({
 			name : artist,
 		});
 		return item[0].get("handle");
+	},
+	//performs a smart update on the list
+	updateList : function(artist) {
+		var listArtist = this.get(artist);
+		if(!listArtist) {
+			this.add(artist);
+		} else {
+			//update the info
+			listArtist.set({
+				count : artist.get("count"),
+			});
+		}
 	}
 });

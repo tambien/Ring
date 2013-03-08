@@ -237,4 +237,9 @@ var RING = function() {
 //development version
 RING.dev = true;
 RING.dontLoad = false;
-RING.installation = false;
+RING.installation = true;
+if (RING.installation){
+	RING.artistCount = 26;	
+} else {
+	RING.artistCount = 14;
+}
