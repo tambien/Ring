@@ -12,12 +12,10 @@ var app = express();
 
 // log requests
 //app.use(express.logger('dev'));
-var logFile = fs.createWriteStream('./log/Ring.log', {
-	flags : 'a'
+
+var log = fs.createWriteStream('./log/Ring.log', {
+	'flags' : 'a'
 });
-app.use(express.logger({
-	stream : logFile
-}));
 
 //all client requests goes through here
 app.use('/get', client.get);
@@ -33,7 +31,7 @@ app.listen(3000, "127.0.0.1");
 async.series([
 function(getArtistList) {
 	artists.retrieve(function() {
-		console.log("got the artists from the spreadsheet");
+		//console.log("got the artists from the spreadsheet");
 		getArtistList();
 	});
 },
@@ -41,7 +39,7 @@ function(getArtistList) {
 //update the cache
 function(getCache) {
 	client.cachePastWeek(function() {
-		console.log('cached past week');
+		log.write('cached the past week: ' + new Date() + "\n");
 		getCache();
 	})
 },
@@ -49,19 +47,19 @@ function(getCache) {
 //do an initial crawl
 function(crawlInitially) {
 	crawler.update(function(err) {
-		console.log('crawl completed');
+		log.write('crawled tumblr: ' + new Date() + "\n");
 		crawlInitially();
 		if(err) {
 			console.log(err);
 		}
 	});
 }], function() {
-	console.log("finished initial retrieval and crawl");
+	log.write('did initial crawl: ' + new Date() + "\n");
 });
 //updating the database every 60 minutes
 setInterval(function() {
 	crawler.update(function(err) {
-		console.log('crawl completed')
+		log.write('crawled tumblr: ' + new Date() + "\n");
 		if(err) {
 			console.log(err);
 		}
@@ -71,17 +69,13 @@ setInterval(function() {
 //update the list from the spreadsheet every 2 hours
 setInterval(function() {
 	artists.retrieve(function() {
-		console.log("got the artists from the spreadsheet");
+		log.write('retrieved artists from spreadsheet at ' + new Date() + "\n");
+		client.cachePastWeek(function() {
+			log.write('cached the past week: ' + new Date() + "\n");
+			getCache();
+		})
 	});
 	//every 1 hour
-},  60 * 60 * 1000);
-/*
-//update the cache every 60 minutes
-setInterval(function() {
-	client.cachePastWeek(function() {
-		console.log('cached past week');
-	})
 }, 60 * 60 * 1000);
-*/
 //print a message
-console.log('RING Started');
+log.write('RING Started\n');

@@ -4,6 +4,7 @@ RING.Sound = Backbone.Model.extend({
 		"loaded" : 0,
 		"playable" : false,
 		"started" : false,
+		"allLoaded" : false,
 	},
 
 	initialize : function(attributes, options) {
@@ -16,21 +17,13 @@ RING.Sound = Backbone.Model.extend({
 			//this.files = ['out0.wav', 'out1.wav', 'out2.wav', 'out0.wav', 'out1.wav', 'out2.wav'];
 			this.inBuffer = [];
 			this.outBuffer = [];
-			//load the buffers
-			for(var i = 0; i < this.files.length; i++) {
-				if(i < 5) {
-					var buffArray = this.inBuffer;
-				} else {
-					var buffArray = this.outBuffer;
-				}
-				this.loadBuffer(this.files[i], buffArray, i % 5)
-			}
 			//listen for changes in visibility
 			var throttledPlay = _.throttle(this.soundModel, 100);
 			this.listenTo(RING.tumblrCollection, "change:visible", throttledPlay);
 			this.listenTo(RING.twitterCollection, "change:visible", throttledPlay);
 			//listen for loading
-			this.on("change:loaded", this.canPlay);
+			this.on("change:loaded", this.testLoaded);
+			this.on("change:allLoaded", this.canPlay);
 			this.on("change:started", this.canPlay);
 			//the main output
 			this.output = this.context.createGain();
@@ -48,6 +41,25 @@ RING.Sound = Backbone.Model.extend({
 		var red = new THREE.Color().setRGB(1, 48 / 255, 49 / 255);
 		var green = new THREE.Color().setRGB(151 / 255, 201 / 255, 76 / 255);
 		this.colors = [blue, yellow, purple, red, green];
+	},
+	loadSounds : function(callback) {
+		//load the buffers
+		this.loadedCallback = callback;
+		for(var i = 0; i < this.files.length; i++) {
+			if(i < 5) {
+				var buffArray = this.inBuffer;
+			} else {
+				var buffArray = this.outBuffer;
+			}
+			this.loadBuffer(this.files[i], buffArray, i % 5)
+		}
+	},
+	testLoaded : function(model, loaded){
+		if (loaded === this.files.length){
+			this.set("allLoaded", true);
+			this.loadedCallback();
+			console.log("audio Loaded");
+		}
 	},
 	//load a single file
 	loadBuffer : function(url, buffArray, index) {
@@ -67,7 +79,7 @@ RING.Sound = Backbone.Model.extend({
 		xhr.send();
 	},
 	canPlay : function(model) {
-		if(this.get("started") && this.get("loaded") === this.files.length) {
+		if(this.get("started") && this.get("allLoaded")) {
 			this.set("playable", true);
 			this.output.gain.value = 1.;
 		}

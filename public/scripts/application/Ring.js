@@ -43,12 +43,12 @@ var RING = function() {
 			RING.tumblrCollection = new RING.TumblrCollection();
 			RING.twitterCollection = new RING.TwitterCollection();
 			RING.Particles.initialize();
+			//make the sound playing module
+			RING.sound = new RING.Sound();
 			//make the controls
 			RING.controls = new RING.Controls();
 			//make the attract mode
 			RING.attractMode = new RING.AttractMode();
-			//make the sound playing module
-			RING.sound = new RING.Sound();
 		} else {
 
 		}

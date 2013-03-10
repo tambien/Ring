@@ -38,7 +38,7 @@ RING.Controls = Backbone.Model.extend({
 		this.throttledRender = _.throttle(this.render, 1000)
 		//var throttledRender = _.defer(self.render.bind(self));
 		this.on("change:startTime", this.throttledRender);
-		//this.on("change:endTime", this.throttledRender);
+		this.on("change:endTime", this.throttledRender);
 		this.on("change:reblogLevel", this.throttledRender);
 		//start the rendering when everything is loaded
 		this.on("change:allLoaded", this.allLoaded);
@@ -65,7 +65,12 @@ RING.Controls = Backbone.Model.extend({
 			model : this,
 		});
 		//start the loading
-		this.loadCache();
+		var self = this;
+		this.set("loadingText", "Downloading Sounds")
+		RING.sound.loadSounds(function(){
+			self.set("loading", self.get('loading') + 1);
+			self.loadCache();
+		})
 		if(RING.installation) {
 			//setup the background update every 60 minutes
 			setInterval(function(self) {
@@ -899,7 +904,7 @@ RING.LoadingScreen = Backbone.View.extend({
 		this.$loadingText.html(text);
 	},
 	updateProgress : function(model, loadedCount) {
-		var total = RING.artistCount + 4;
+		var total = RING.artistCount + 5;
 		var percentage = Math.round((loadedCount / total) * 100);
 		percentage += "%";
 		this.$loadingArea.css({
