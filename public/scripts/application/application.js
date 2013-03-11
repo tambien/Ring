@@ -1,6 +1,5 @@
 /*
- * to see the unminified code go to:
- * 
+ * to browse the unminified code go to:
  * https://github.com/tambien/Ring
  */
 
@@ -95,4 +94,4 @@ a.concat(RING.twitterCollection.where({visible:!0}));if(a=RING.Util.choose(a)){v
 this.canPlay);this.on("change:started",this.canPlay);this.output=this.context.createGain();this.compressor=this.context.createDynamicsCompressor();this.output.connect(this.compressor);this.compressor.connect(this.context.destination);this.output.gain.value=0}},makeColors:function(){var a=(new THREE.Color).setRGB(40/255,170/255,225/255),b=(new THREE.Color).setRGB(158/255,65/255,195/255),c=(new THREE.Color).setRGB(1,226/255,31/255),e=(new THREE.Color).setRGB(1,48/255,49/255),d=(new THREE.Color).setRGB(151/
 255,201/255,76/255);this.colors=[a,c,b,e,d]},loadSounds:function(a){this.loadedCallback=a;for(a=0;a<this.files.length;a++)this.loadBuffer(this.files[a],5>a?this.inBuffer:this.outBuffer,a%5)},testLoaded:function(a,b){b===this.files.length&&(this.set("allLoaded",!0),this.loadedCallback(),console.log("audio Loaded"))},loadBuffer:function(a,b,c){var e=new XMLHttpRequest;e.open("GET","./audio/"+a+".mp3",!0);e.responseType="arraybuffer";var d=this;e.onload=function(a){d.context.decodeAudioData(e.response,
 function(a){d.set("loaded",d.get("loaded")+1);b[c]=a})};e.send()},canPlay:function(a){this.get("started")&&this.get("allLoaded")&&(this.set("playable",!0),this.output.gain.value=1)},soundModel:function(a,b){if(this.get("playable")){var c=this.context.createBufferSource(),e=RING.Util.scaleExp(a.get("size"),10,60,0,1),e=Math.min(e,1),d=this.context.createGainNode();d.gain.value=e;c.connect(d);e=this.context.createPanner();e.setPosition(a.get("x")/200,a.get("y")/200,0);d.connect(e);e.connect(this.output);
-d=this.indexFromColor(a);b?0<=d&&(c.buffer=this.inBuffer[d]):0<=d&&(c.buffer=this.outBuffer[d]);c.start(0.2)}},indexFromColor:function(a){a=a.get("color");for(var b=0;b<this.colors.length;b++){var c=this.colors[b];if(a.r===c.r&&a.g===c.g&&a.b===c.b)return b}return-1}});
+d=this.indexFromColor(a);b?0<=d&&(c.buffer=this.inBuffer[d]):0<=d&&(c.buffer=this.outBuffer[d]);c.start(0.5)}},indexFromColor:function(a){a=a.get("color");for(var b=0;b<this.colors.length;b++){var c=this.colors[b];if(a.r===c.r&&a.g===c.g&&a.b===c.b)return b}return-1}});

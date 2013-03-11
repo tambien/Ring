@@ -110,7 +110,7 @@ RING.Sound = Backbone.Model.extend({
 					source.buffer = this.outBuffer[index];
 				}
 			}
-			source.start(.2);
+			source.start(.5);
 		}
 	},
 	indexFromColor : function(model) {
