@@ -46,8 +46,8 @@ RING.Post = Backbone.Model.extend({
 		this.view.remove();
 	},
 	//take all of the things off of the screen
-	removeAll : function(){
-		if (this.line){
+	removeAll : function() {
+		if(this.line) {
 			RING.scene.remove(this.line);
 		}
 		//put hte particle off of the screen
@@ -64,6 +64,7 @@ RING.Post = Backbone.Model.extend({
 		if(duration > 0) {
 			var position = (timestamp - startTime) / duration;
 			var angle = position * Math.PI * 2 + Math.PI / 2;
+			angle = (angle + Math.PI * 2) % (Math.PI * 2);
 			this.theta = angle;
 			this.set("theta", angle);
 			var radius = this.get("radius");
@@ -166,12 +167,20 @@ RING.Post.View = Backbone.View.extend({
 			RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") + 1, {
 				silent : false,
 			})
-			RING.Particles.positionInstant(model, model.get("x") > 0 ? 10000 : -10000, model.get("y") > 0 ? 10000 : -10000);
-			self.position(model, model.get("x"), model.get("y"));
+			if(model.origin) {
+
+				setTimeout(function() {
+					RING.Particles.positionInstant(model, model.origin.get("x"), model.origin.get("y"));
+					self.position(model, model.get("x"), model.get("y"));
+				}, 800);
+			} else {
+				RING.Particles.positionInstant(model, model.get("x") > 0 ? 10000 : -10000, model.get("y") > 0 ? 10000 : -10000);
+				self.position(model, model.get("x"), model.get("y"));
+			}
 		} else {
 			RING.controls.set("visiblePosts", RING.controls.get("visiblePosts") - 1, {
 				silent : false,
-			})
+			});
 			RING.Particles.position(model, model.get("x") > 0 ? 10000 : -10000, model.get("y") > 0 ? 10000 : -10000);
 		}
 		//}, RING.Util.randomInt(0, 600), model);
@@ -225,6 +234,5 @@ RING.Post.View = Backbone.View.extend({
 		RING.highlight.position.y = this.model.get("y");
 		RING.highlight.scale.x = this.model.get("size") * 1.6;
 		RING.highlight.scale.y = this.model.get("size") * 1.6;
-	}, 
-	
+	},
 })

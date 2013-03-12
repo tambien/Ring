@@ -213,6 +213,8 @@ RING.Particles = function() {
 
 	function positionParticle(model, x, y, callback) {
 		var index = model.get("particleIndex");
+		//var duration = RING.Util.clip(RING.Util.scaleInt(model.get("theta"), 0, 6.29, 100, 1200), 100, 1200);
+		var duration = 800;
 		var system;
 		//get an object from the array depending on the type of the object
 		switch(model.get("style")) {
@@ -243,7 +245,7 @@ RING.Particles = function() {
 		}).to({
 			x : x,
 			y : y,
-		}, RING.Util.randomInt(500, 800)).easing(easing).onUpdate(function() {
+		}, duration).easing(easing).onUpdate(function() {
 			system.geometry.vertices[index].x = this.x;
 			system.geometry.vertices[index].y = this.y;
 			system.geometry.verticesNeedUpdate = true;

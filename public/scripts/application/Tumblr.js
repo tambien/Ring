@@ -272,7 +272,12 @@ RING.Tumblr = RING.Post.extend({
 			var newX = node.r * Math.cos(node.t);
 			var newY = node.r * Math.sin(node.t);
 			var view = this.view;
-
+			var self = this;
+			/*
+			setTimeout(function(){
+				view.lineVisible(self, true);
+				view.line.geometry.verticesNeedUpdate = true;
+			}, 800);*/
 			if(this.systemNodesTween[i]) {
 				this.systemNodesTween[i].stop();
 			}
@@ -291,7 +296,9 @@ RING.Tumblr = RING.Post.extend({
 						view.line.geometry.verticesNeedUpdate = true;
 					}
 				}
-			}(node, view)).start();
+			}(node, view)).onComplete(function() {
+				//view.lineVisible(this, true);
+			}).start();
 			//node.v.setX(newX);
 			//node.v.setY(newY);
 		}

@@ -132,6 +132,7 @@ RING.Controls = Backbone.Model.extend({
 		var tumblrModels = RING.tumblrCollection.primary;
 		for(var i = 0, len = tumblrModels.length; i < len; i++) {
 			var model = tumblrModels[i];
+			var delayTime = RING.Util.clip(RING.Util.scaleInt(model.get("theta"), 0, 6.29, 0, 800), 0, 800);
 			//check if the artist matches
 			var artistMatch = false;
 			for(var j = 0; j < artists.length; j++) {
@@ -145,7 +146,7 @@ RING.Controls = Backbone.Model.extend({
 				setTimeout(function(model) {
 					//set it as  notvisible
 					model.set("visible", false);
-				}, 0, model);
+				}, delayTime, model);
 				continue;
 			}
 			//check that it's the right time range
@@ -155,7 +156,7 @@ RING.Controls = Backbone.Model.extend({
 			if(!timeMatch) {
 				setTimeout(function(model) {
 					model.set("visible", false);
-				}, 0, model);
+				}, delayTime, model);
 				continue;
 			}
 			//set it as visible
@@ -163,11 +164,13 @@ RING.Controls = Backbone.Model.extend({
 				model.set("visible", true);
 				//and all it's reblogs
 				model.makeReblogsVisible(reblogLevel);
-			}, 0, model);
+			}, 800 - delayTime, model);
 		};
+		
 		var twitterModels = RING.twitterCollection.models
 		for(var i = 0, len = twitterModels.length; i < len; i++) {
 			var model = twitterModels[i];
+			var delayTime = RING.Util.clip(RING.Util.scaleInt(model.get("theta"), 0, 6.29, 0, 800), 0, 800);
 			//check if the artist matches
 			var artistMatch = false;
 			for(var j = 0; j < artists.length; j++) {
@@ -181,7 +184,7 @@ RING.Controls = Backbone.Model.extend({
 				setTimeout(function(model) {
 					//set it as not visible
 					model.set("visible", false);
-				}, 0, model);
+				}, delayTime, model);
 				continue;
 			}
 			//check that it's the right time range
@@ -192,14 +195,15 @@ RING.Controls = Backbone.Model.extend({
 				setTimeout(function(model) {
 					//set it as not visible
 					model.set("visible", false);
-				}, 0, model);
+				}, delayTime, model);
 				continue;
 			}
 			setTimeout(function(model) {
 				//set it as visible
 				model.set("visible", true);
-			}, 0, model);
+			}, 800 - delayTime, model);
 		};
+		
 	},
 	//loads the two emuze things into a special spot
 	loadeMuze : function(callback) {

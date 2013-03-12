@@ -72,7 +72,6 @@ setInterval(function() {
 		log.write('retrieved artists from spreadsheet at ' + new Date() + "\n");
 		client.cachePastWeek(function() {
 			log.write('cached the past week: ' + new Date() + "\n");
-			getCache();
 		})
 	});
 	//every 1 hour
