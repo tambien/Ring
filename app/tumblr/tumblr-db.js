@@ -160,6 +160,20 @@ var async = require('async');
 		});
 	}
 
+	function DELETEOLD(){
+		db.connect(function(client) {
+			var now = new Date();
+			var threeWeeksAgo = new Date(now.getFullYear(), now.getMonth(), parseInt(now.getDate()) - 21);
+			client.query("DELETE FROM tumblr_posts WHERE timestamp <= timestamp $1", [threeWeeksAgo], function(err, res) {
+				if(err) {
+					console.log("could not delete tumblr_posts: " + err);
+				} else {
+					console.log("DELETED old tumblr_posts");
+				}
+			});
+		});
+	}
+
 	/*
 	 * GETTERS
 	 */
